@@ -1,0 +1,28 @@
+apply plugin: 'java'
+apply plugin: 'macAppBundle'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile files('libs/littleproxy-SNAPSHOT-20141208.jar');
+    compile 'org.json:json:20090211'
+    compile 'com.google.guava:guava:12.0'
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.zutherb.gradle:gradle-macappbundle:0.1'
+    }
+}
+
+macAppBundle {
+    mainClassName = "se.ade.autoproxywrapper.Main"
+}

@@ -1,0 +1,7 @@
+{
+    "localListeningPort": 3128,
+    "forwardProxy": {
+        "host": "someproxy.intra",
+        "port": 3128
+    }
+}

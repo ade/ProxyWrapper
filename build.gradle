@@ -2,6 +2,8 @@ apply plugin: 'java'
 apply plugin: 'macAppBundle'
 
 sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 version = '1.0'
 
 repositories {
@@ -25,4 +27,8 @@ buildscript {
 
 macAppBundle {
     mainClassName = "se.ade.autoproxywrapper.Main"
+    appName = "AutoProxyWrapper"
+    icon = "assets/icon-apple-512.icns"
+    jvmVersion = 1.7
+    bundleExtras.put("NSHighResolutionCapable", "true")
 }

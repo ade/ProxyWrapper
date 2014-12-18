@@ -1,5 +1,6 @@
 package se.ade.autoproxywrapper;
 
+import com.google.common.eventbus.Subscribe;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpObject;
@@ -7,14 +8,29 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
+import se.ade.autoproxywrapper.events.*;
 
+import java.awt.*;
 import java.net.InetSocketAddress;
 import java.util.Queue;
 
 public class MiniHttpProxy {
-    final static boolean DEBUG_LOG = false;
     final static long DNS_LOOKUP_INTERVAL = 5000;
+
+    boolean enableLogging = false;
     private final Config config;
+
+    private Object eventListener = new Object() {
+        @Subscribe
+        public void onEvent(SetLoggingEnabledEvent e) {
+            enableLogging = e.enabled;
+        }
+
+        @Subscribe
+        public void onEvent(ShutDownEvent e) {
+            EventBus.get().unregister(eventListener);
+        }
+    };
 
     Boolean isProxyResolvable;
     Boolean lastProxyState;
@@ -26,6 +42,7 @@ public class MiniHttpProxy {
 
     public MiniHttpProxy() {
         this.config = new Config("AutoProxyWrapper.json").readFromFile().saveToFile();
+        EventBus.get().register(eventListener);
     }
 
     private void refreshProxyState() {
@@ -36,17 +53,22 @@ public class MiniHttpProxy {
                     @Override
                     public void run() {
                         try {
-                            if (DEBUG_LOG) System.out.println("Checking if there is a proxy...");
+                            if (enableLogging) System.out.println("Checking if there is a proxy...");
 
                             isProxyResolvable = locationProber.isAddressResolvable(config.forwardProxyHost);
                             if (lastProxyState != isProxyResolvable) {
                                 System.out.println("New forward proxy state: " + isProxyResolvable);
+
                                 forwardProxyAddress = new InetSocketAddress(config.forwardProxyHost, config.forwardProxyPort);
+
+                                ProxyMode mode = isProxyResolvable ? ProxyMode.USE_PROXY : ProxyMode.DIRECT;
+
+                                EventBus.get().post(new DetectModeEvent(mode));
                             }
                             lastProxyState = isProxyResolvable;
                             lastDnsQuery = System.currentTimeMillis();
 
-                            if (DEBUG_LOG) System.out.println("Forward proxy resolvable: " + isProxyResolvable);
+                            if (enableLogging) System.out.println("Forward proxy resolvable: " + isProxyResolvable);
                         } catch (Exception e) {
                             System.out.print("Error in refreshProxyState: " + e.getMessage());
                         } finally {
@@ -79,7 +101,7 @@ public class MiniHttpProxy {
 
             @Override
             public void connectionFailed(Throwable throwable) {
-                System.out.println("Forward proxy connection failed: " + throwable.toString());
+                EventBus.get().post(new ForwardProxyConnectionFailureEvent(throwable));
             }
         };
 
@@ -98,43 +120,49 @@ public class MiniHttpProxy {
         };
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
-                .withPort(3128)
+                .withPort(config.localListeningPort)
                 .withChainProxyManager(chainedProxyManager);
 
-        if(DEBUG_LOG) {
-            bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
-                public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                    return new HttpFiltersAdapter(originalRequest) {
-                        @Override
-                        public HttpResponse clientToProxyRequest(HttpObject httpObject) {
+
+        bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new HttpFiltersAdapter(originalRequest) {
+                    @Override
+                    public HttpResponse clientToProxyRequest(HttpObject httpObject) {
+                        if (enableLogging) {
                             if (httpObject instanceof DefaultHttpRequest) {
                                 DefaultHttpRequest defaultHttpRequest = (DefaultHttpRequest) httpObject;
+                                EventBus.get().post(new RequestEvent(defaultHttpRequest.getMethod().toString(), defaultHttpRequest.getUri()));
+
+                                /*
                                 System.out.println("Requesting: " + defaultHttpRequest.getMethod()
                                                 + " "
                                                 + defaultHttpRequest.getUri()
                                 );
+                                */
                             }
-                            return null;
                         }
+                        return null;
+                    }
 
-                        @Override
-                        public HttpResponse proxyToServerRequest(HttpObject httpObject) {
-                            return null;
-                        }
+                    @Override
+                    public HttpResponse proxyToServerRequest(HttpObject httpObject) {
+                        return null;
+                    }
 
-                        @Override
-                        public HttpObject serverToProxyResponse(HttpObject httpObject) {
-                            return httpObject;
-                        }
+                    @Override
+                    public HttpObject serverToProxyResponse(HttpObject httpObject) {
+                        return httpObject;
+                    }
 
-                        @Override
-                        public HttpObject proxyToClientResponse(HttpObject httpObject) {
-                            return httpObject;
-                        }
-                    };
-                }
-            });
-        }
+                    @Override
+                    public HttpObject proxyToClientResponse(HttpObject httpObject) {
+                        return httpObject;
+                    }
+                };
+            }
+        });
+
 
         bootstrap.start();
     }

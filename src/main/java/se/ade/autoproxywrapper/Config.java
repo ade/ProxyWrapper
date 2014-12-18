@@ -28,8 +28,8 @@ public class Config {
                 JSONObject object = new JSONObject(configFile);
                 JSONObject forwardProxy = object.getJSONObject("forwardProxy");
 
-                this.forwardProxyHost = object.getString("host");
-                this.forwardProxyPort = object.getInt("port");
+                this.forwardProxyHost = forwardProxy.getString("host");
+                this.forwardProxyPort = forwardProxy.getInt("port");
                 this.localListeningPort = object.getInt("localListeningPort");
             }
         } catch (JSONException e) {
@@ -42,10 +42,11 @@ public class Config {
     public Config saveToFile() {
         try {
             JSONObject rootObject = new JSONObject()
+                .put("localListeningPort", this.localListeningPort)
                 .put("forwardProxy", new JSONObject()
                     .put("host", this.forwardProxyHost)
                     .put("port", this.forwardProxyPort)
-                    .put("localListeningPort", this.localListeningPort)
+
                 );
 
             writeStringToFile(this.fileName, rootObject.toString(4));

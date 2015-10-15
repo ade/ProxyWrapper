@@ -1,6 +1,6 @@
 package se.ade.autoproxywrapper;
 
-import com.apple.eawt.Application;
+//import com.apple.eawt.Application;
 import com.google.common.eventbus.Subscribe;
 import se.ade.autoproxywrapper.events.*;
 
@@ -172,8 +172,8 @@ public class HorribleJavaGui extends Frame implements ActionListener {
 
             if (iconimage != null) {
                 setIconImage(iconimage);
-                Application application = Application.getApplication();
-                application.setDockIconImage(iconimage);
+//                Application application = Application.getApplication();
+//                application.setDockIconImage(iconimage);
             }
         }
 

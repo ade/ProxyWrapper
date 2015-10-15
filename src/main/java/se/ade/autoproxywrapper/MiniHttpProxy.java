@@ -10,11 +10,10 @@ import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import se.ade.autoproxywrapper.events.*;
 
-import java.awt.*;
 import java.net.InetSocketAddress;
 import java.util.Queue;
 
-public class MiniHttpProxy {
+public class MiniHttpProxy implements Runnable{
     final static long DNS_LOOKUP_INTERVAL = 5000;
 
     boolean enableLogging = false;
@@ -43,6 +42,7 @@ public class MiniHttpProxy {
     public MiniHttpProxy() {
         this.config = new Config("AutoProxyWrapper.json").readFromFile().saveToFile();
         EventBus.get().register(eventListener);
+        EventBus.get().post(new GenericLogEvent("Proxy started"));
     }
 
     private void refreshProxyState() {
@@ -165,5 +165,10 @@ public class MiniHttpProxy {
 
 
         bootstrap.start();
+    }
+
+    @Override
+    public void run() {
+        startProxy();
     }
 }

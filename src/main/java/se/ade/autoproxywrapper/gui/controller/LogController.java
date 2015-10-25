@@ -10,11 +10,14 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import se.ade.autoproxywrapper.Config;
 import se.ade.autoproxywrapper.events.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+
+import static se.ade.autoproxywrapper.Config.config;
 
 public class LogController {
 
@@ -30,7 +33,7 @@ public class LogController {
 
     @FXML
     public void initialize() {
-        EventBus.get().register(new LogEventListener());
+        EventBus.get().register(this);
         Bindings.bindContent(textFlow.getChildren(), observableListNode);
     }
 
@@ -41,25 +44,24 @@ public class LogController {
         });
     }
 
-    private class LogEventListener {
-        @Subscribe
-        public void onEvent(GenericLogEvent e) {
-            addText(e.getMessage());
-        }
+    @Subscribe
+    public void genericLogEvent(GenericLogEvent e) {
+        if(!e.isVerbose() || config().isVerboseLogging())
+        addText(e.getMessage());
+    }
 
-        @Subscribe
-        public void onEvent(ForwardProxyConnectionFailureEvent e) {
-            addText(e.error.toString());
-        }
+    @Subscribe
+    public void forwardProxyConnectionFailureEvent(ForwardProxyConnectionFailureEvent e) {
+        addText(e.error.toString());
+    }
 
-        @Subscribe
-        public void onEvent(RequestEvent e) {
-            addText(e.method + " " + e.url);
-        }
+    @Subscribe
+    public void requestEvent(RequestEvent e) {
+        addText(e.method + " " + e.url);
+    }
 
-        @Subscribe
-        public void onEvent(DetectModeEvent e) {
-            addText("In " + e.mode.getName() + " mode (auto)");
-        }
+    @Subscribe
+    public void detectModeEvent(DetectModeEvent e) {
+        addText("In " + e.mode.getName() + " mode (auto)");
     }
 }

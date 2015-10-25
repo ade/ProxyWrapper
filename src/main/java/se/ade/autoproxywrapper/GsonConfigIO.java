@@ -20,7 +20,7 @@ public class GsonConfigIO {
             String json = new String(bytes, "UTF-8");
             return GSON.fromJson(json, GsonConfig.class);
         } catch (java.io.IOException e) {
-            System.err.println("Could not load config from file " + FILE + "\n" + e.getMessage());
+            System.err.println("Could not load config: " + e.getMessage());
             return null;
         }
     }
@@ -29,7 +29,7 @@ public class GsonConfigIO {
         try {
             Files.write(Paths.get(FILE), GSON.toJson(gsonConfig).getBytes());
         } catch (IOException e) {
-            System.err.println("Could not save config to file " + FILE + "\n" + e.getMessage());
+            System.err.println("Could not save config:" + e.getMessage());
         }
     }
 

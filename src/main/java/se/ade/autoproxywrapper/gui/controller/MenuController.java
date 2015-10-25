@@ -3,8 +3,12 @@ package se.ade.autoproxywrapper.gui.controller;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import se.ade.autoproxywrapper.Main;
+import se.ade.autoproxywrapper.events.EventBus;
+import se.ade.autoproxywrapper.events.ShutDownEvent;
 
 import java.io.IOException;
 
@@ -12,31 +16,56 @@ import static javafx.stage.StageStyle.DECORATED;
 
 public class MenuController {
 
-    @FXML
-    public void initialize() {}
+    private Main main;
 
     @FXML
-    public void menuPreference() throws IOException {
-        //TODO Implement in later commits
-        /*FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getClassLoader().getResource("view/preferences.fxml"));
+    public void initialize() {
+    }
+
+    @FXML
+    public void menuProperties() throws IOException {
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getClassLoader().getResource("view/properties.fxml"));
+        BorderPane pane = loader.load();
+
+        Stage stage = new Stage(DECORATED);
+        stage.initOwner(main.getPrimaryStage());
+        stage.setResizable(false);
+        stage.setTitle("Properties");
+        Scene scene = new Scene(pane, 500, 300);
+        stage.setScene(scene);
+        stage.show();
+
+        loader.<PropertiesController>getController().setWindow(stage);
+    }
+
+    @FXML
+    public void menuProxies() throws IOException {
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getClassLoader().getResource("view/proxies.fxml"));
         GridPane pane = loader.load();
 
         Stage stage = new Stage(DECORATED);
-        Scene scene = new Scene(pane, 600, 400);
+        stage.initOwner(main.getPrimaryStage());
+        stage.setResizable(false);
+        stage.setTitle("Proxies");
+        Scene scene = new Scene(pane, 500, 300);
         stage.setScene(scene);
-        stage.show();*/
+        stage.show();
     }
 
     @FXML
     public void menuClose() {
-        //TODO shutdown gracefully
-        System.exit(0);
+        EventBus.get().post(new ShutDownEvent());
     }
 
     @FXML
     public void menuAbout() throws Exception {
         AboutController aboutController = new AboutController();
         aboutController.initialize();
+    }
+
+    public void setMain(Main main) {
+        this.main = main;
     }
 }

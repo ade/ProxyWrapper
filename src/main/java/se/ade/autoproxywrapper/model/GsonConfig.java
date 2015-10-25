@@ -9,6 +9,8 @@ public class GsonConfig {
 
     private int localPort;
 
+    private boolean verboseLogging;
+
     public List<ForwardProxy> getForwardProxies() {
         return forwardProxies;
     }
@@ -23,5 +25,13 @@ public class GsonConfig {
 
     public void setLocalPort(int localPort) {
         this.localPort = localPort;
+    }
+
+    public boolean isVerboseLogging() {
+        return verboseLogging;
+    }
+
+    public void setVerboseLogging(boolean verboseLogging) {
+        this.verboseLogging = verboseLogging;
     }
 }

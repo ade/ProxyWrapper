@@ -19,14 +19,14 @@ public class AboutController {
 
     public void initialize() throws Exception {
         try {
-            Font.loadFont(Main.class.getResource("/font/Quicksand_Book.otf").toExternalForm(), 32);
+            Font.loadFont(getClass().getResource("/font/Quicksand_Book.otf").toExternalForm(), 32);
 
             WebView view = new WebView();
             view.setContextMenuEnabled(false);
             WebEngine engine = view.getEngine();
             addJavaToJavascriptBridge(engine);
-            engine.setUserStyleSheetLocation(Main.class.getResource("/view/about.css").toExternalForm());
-            engine.load(Main.class.getResource("/view/about.html").toExternalForm());
+            engine.setUserStyleSheetLocation(getClass().getResource("/view/about.css").toExternalForm());
+            engine.load(getClass().getResource("/view/about.html").toExternalForm());
 
             Stage stage = new Stage(UNDECORATED);
             stage.setResizable(false);

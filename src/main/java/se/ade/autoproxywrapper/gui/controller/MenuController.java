@@ -1,26 +1,27 @@
 package se.ade.autoproxywrapper.gui.controller;
 
+import static javafx.stage.StageStyle.DECORATED;
+
+import java.io.IOException;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import se.ade.autoproxywrapper.Main;
 import se.ade.autoproxywrapper.events.EventBus;
 import se.ade.autoproxywrapper.events.ShutDownEvent;
 
-import java.io.IOException;
-
-import static javafx.stage.StageStyle.DECORATED;
-
 public class MenuController {
 
     private Main main;
+	private AboutController aboutController;
 
     @FXML
     public void initialize() {
+		aboutController = new AboutController();
     }
 
     @FXML
@@ -68,8 +69,7 @@ public class MenuController {
 
     @FXML
     public void menuAbout() throws Exception {
-        AboutController aboutController = new AboutController();
-        aboutController.initialize();
+        aboutController.show();
     }
 
     public void setMain(Main main) {

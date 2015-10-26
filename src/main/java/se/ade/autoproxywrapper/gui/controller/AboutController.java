@@ -1,26 +1,27 @@
 package se.ade.autoproxywrapper.gui.controller;
 
-import javafx.scene.Scene;
-import javafx.scene.text.Font;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
-import netscape.javascript.JSObject;
-import se.ade.autoproxywrapper.Main;
+import static javafx.stage.StageStyle.UNDECORATED;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static javafx.stage.StageStyle.UNDECORATED;
+import javafx.scene.Scene;
+import javafx.scene.text.Font;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
+import netscape.javascript.JSObject;
 
 public class AboutController {
 
-    public void initialize() throws Exception {
-        try {
-            Font.loadFont(getClass().getResource("/font/Quicksand_Book.otf").toExternalForm(), 32);
+	public AboutController() {
+		Font.loadFont(getClass().getResource("/font/Quicksand_Book.otf").toExternalForm(), 32);
+	}
 
+	public void show() throws Exception {
+        try {
             WebView view = new WebView();
             view.setContextMenuEnabled(false);
             WebEngine engine = view.getEngine();
@@ -33,10 +34,13 @@ public class AboutController {
             Scene scene = new Scene(view, 250, 320);
             stage.setScene(scene);
             stage.show();
+			stage.requestFocus();
 
-            stage.focusedProperty().addListener(observable -> {
-                stage.close();
-            });
+            stage.focusedProperty().addListener((observable, oldValue, newValue) -> {
+				if (!newValue) {
+					stage.close();
+				}
+			});
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

@@ -1,5 +1,7 @@
 package se.ade.autoproxywrapper.gui.controller;
 
+import com.sun.javafx.scene.control.skin.ListViewSkin;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -12,15 +14,16 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
+import se.ade.autoproxywrapper.Config;
 import se.ade.autoproxywrapper.events.EventBus;
+import se.ade.autoproxywrapper.events.GenericLogEvent;
 import se.ade.autoproxywrapper.events.RestartEvent;
 import se.ade.autoproxywrapper.model.ForwardProxy;
 
-import java.util.List;
-
 import static se.ade.autoproxywrapper.Config.config;
-import static se.ade.autoproxywrapper.Config.save;
 
 public class ProxiesController {
 
@@ -37,8 +40,14 @@ public class ProxiesController {
     public Button saveButton;
 
     private ForwardProxy selectedProxy;
+    private ObservableList<ForwardProxy> items = FXCollections.observableArrayList(Extractor.get());
+    private Stage window;
 
-    private ObservableList<ForwardProxy> items = FXCollections.observableArrayList();
+    private static class Extractor {
+        public static Callback<ForwardProxy, Observable[]> get() {
+            return param -> new Observable[]{};
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -60,11 +69,20 @@ public class ProxiesController {
         }
         selectedProxy.setHost(newHostName.getText());
         selectedProxy.setPort(Integer.parseInt(newPort.getText()));
+        refresh();
+    }
+
+    @FXML
+    public void cancel() {
+        window.close();
+    }
+
+    @FXML
+    public void save() {
         config().setForwardProxies(items);
-
-        save();
-        hostList.refresh();
-
+        Config.save();
+        window.close();
+        EventBus.get().post(GenericLogEvent.info("Restarting..."));
         EventBus.get().post(new RestartEvent());
     }
 
@@ -108,6 +126,14 @@ public class ProxiesController {
         return label;
     }
 
+    private void refresh() {
+        hostList.getProperties().put(ListViewSkin.RECREATE, Boolean.TRUE);
+    }
+
+    public void setWindow(Stage window) {
+        this.window = window;
+    }
+
     public class ForwardProxyListCell extends ListCell<ForwardProxy> {
 
         @Override
@@ -141,21 +167,13 @@ public class ProxiesController {
 
         private EventHandler<ActionEvent> getRemoveEvent() {
             return event -> {
-                List<ForwardProxy> forwardProxies = config().getForwardProxies();
-                if(forwardProxies.isEmpty()) {
-                    items.clear();
-                } else {
-                    for (ForwardProxy proxy : forwardProxies) {
-                        if (proxy.equals(hostList.getSelectionModel().getSelectedItem())) {
-                            items.remove(proxy);
-                            config().setForwardProxies(items);
-                            save();
-                            EventBus.get().post(new RestartEvent());
-                            break;
-                        }
+                for (ForwardProxy proxy : items) {
+                    if (proxy.equals(hostList.getSelectionModel().getSelectedItem())) {
+                        items.remove(proxy);
+                        break;
                     }
                 }
-                hostList.refresh();
+                refresh();
             };
         }
     }

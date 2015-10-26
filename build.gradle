@@ -32,8 +32,7 @@ repositories {
 }
 
 dependencies {
-    compile files('libs/littleproxy-SNAPSHOT-20141208.jar');
-    compile 'org.json:json:20090211'
+    compile 'org.littleshoot:littleproxy:1.1.0-beta1'
     compile 'com.google.guava:guava:12.0'
     compile 'com.google.code.gson:gson:1.7.2'
     compile 'org.apache.commons:commons-lang3:3.0'

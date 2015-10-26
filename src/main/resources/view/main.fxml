@@ -14,7 +14,7 @@
                   <MenuItem mnemonicParsing="false" onAction="#menuProperties" text="Properties" />
                   <MenuItem mnemonicParsing="false" onAction="#menuProxies" text="Proxies" />
                   <SeparatorMenuItem mnemonicParsing="false" />
-              <MenuItem mnemonicParsing="false" onAction="#menuClose" text="Close" />
+              <MenuItem mnemonicParsing="false" onAction="#menuClose" text="Exit" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">

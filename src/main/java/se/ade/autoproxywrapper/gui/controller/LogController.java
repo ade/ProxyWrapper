@@ -10,18 +10,19 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import se.ade.autoproxywrapper.Config;
 import se.ade.autoproxywrapper.events.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.LinkedList;
 
 import static se.ade.autoproxywrapper.Config.config;
 
 public class LogController {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
+    private static final int LIMIT = 3000;
 
     @FXML
     public TextFlow textFlow;
@@ -29,7 +30,8 @@ public class LogController {
     @FXML
     public ScrollPane logScrollPane;
 
-    private ObservableList<Node> observableListNode = FXCollections.observableArrayList();
+    private LinkedList<Node> list = new LinkedList<>();
+    private ObservableList<Node> observableListNode = FXCollections.observableList(list);
 
     @FXML
     public void initialize() {
@@ -39,6 +41,9 @@ public class LogController {
 
     private synchronized void addText(String text) {
         Platform.runLater(() -> {
+            if(observableListNode.size() >= LIMIT) {
+                observableListNode.remove(0);
+            }
             observableListNode.add(new Text(DATE_TIME_FORMATTER.format(LocalDateTime.now()) + " | " + text + "\n"));
             logScrollPane.setVvalue(logScrollPane.getHeight());
         });
@@ -47,21 +52,29 @@ public class LogController {
     @Subscribe
     public void genericLogEvent(GenericLogEvent e) {
         if(!e.isVerbose() || config().isVerboseLogging())
-        addText(e.getMessage());
+        addText(e.message);
     }
 
     @Subscribe
     public void forwardProxyConnectionFailureEvent(ForwardProxyConnectionFailureEvent e) {
-        addText(e.error.toString());
+        if(e.error != null) {
+            addText(e.error.toString());
+        }
     }
 
     @Subscribe
     public void requestEvent(RequestEvent e) {
-        addText(e.method + " " + e.url);
+        if(config().isVerboseLogging()) {
+            addText(e.method + " " + e.url);
+        }
     }
 
     @Subscribe
     public void detectModeEvent(DetectModeEvent e) {
-        addText("In " + e.mode.getName() + " mode (auto)");
+        if(e.host != null) {
+            addText("In " + e.mode.getName() + " mode to host \"" + e.host.getHostName() + ":" + e.host.getPort() + "\" (auto)");
+        } else {
+            addText("In " + e.mode.getName() + " mode (auto)");
+        }
     }
 }

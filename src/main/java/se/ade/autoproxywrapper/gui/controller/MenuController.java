@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import se.ade.autoproxywrapper.Main;
 import se.ade.autoproxywrapper.events.EventBus;
@@ -41,17 +42,23 @@ public class MenuController {
 
     @FXML
     public void menuProxies() throws IOException {
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getClassLoader().getResource("view/proxies.fxml"));
-        GridPane pane = loader.load();
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getClassLoader().getResource("view/proxies.fxml"));
+            VBox pane = loader.load();
 
-        Stage stage = new Stage(DECORATED);
-        stage.initOwner(main.getPrimaryStage());
-        stage.setResizable(false);
-        stage.setTitle("Proxies");
-        Scene scene = new Scene(pane, 500, 300);
-        stage.setScene(scene);
-        stage.show();
+            Stage stage = new Stage(DECORATED);
+            stage.initOwner(main.getPrimaryStage());
+            stage.setResizable(false);
+            stage.setTitle("Proxies");
+            Scene scene = new Scene(pane, 500, 300);
+            stage.setScene(scene);
+            stage.show();
+
+            loader.<ProxiesController>getController().setWindow(stage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

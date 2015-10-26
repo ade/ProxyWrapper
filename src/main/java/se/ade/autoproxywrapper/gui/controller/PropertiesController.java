@@ -6,8 +6,11 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.StringUtils;
 import se.ade.autoproxywrapper.Config;
+import se.ade.autoproxywrapper.ProxyMode;
 import se.ade.autoproxywrapper.events.EventBus;
+import se.ade.autoproxywrapper.events.GenericLogEvent;
 import se.ade.autoproxywrapper.events.RestartEvent;
+import se.ade.autoproxywrapper.events.SetModeEvent;
 
 import static se.ade.autoproxywrapper.Config.config;
 
@@ -17,6 +20,9 @@ public class PropertiesController {
     public TextField listeningPort;
 
     @FXML
+    public CheckBox enabled;
+
+    @FXML
     public CheckBox verboseLogging;
 
     private Stage propertiesWindow;
@@ -24,6 +30,7 @@ public class PropertiesController {
     @FXML
     public void initialize() {
         listeningPort.setText(Integer.toString(config().getLocalPort()));
+        enabled.setSelected(config().isEnabled());
         verboseLogging.setSelected(config().isVerboseLogging());
     }
 
@@ -35,10 +42,15 @@ public class PropertiesController {
         int newLocalPort = Integer.parseInt(listeningPort.getText());
         if(config().getLocalPort() != newLocalPort) {
             config().setLocalPort(newLocalPort);
+            EventBus.get().post(GenericLogEvent.info("Restarting..."));
             EventBus.get().post(new RestartEvent());
         }
         config().setVerboseLogging(verboseLogging.isSelected());
         Config.save();
+
+        if(enabled.isSelected() != config().isEnabled()) {
+            EventBus.get().post(new SetModeEvent(enabled.isSelected() ? ProxyMode.AUTO : ProxyMode.DISABLED));
+        }
 
         propertiesWindow.close();
     }

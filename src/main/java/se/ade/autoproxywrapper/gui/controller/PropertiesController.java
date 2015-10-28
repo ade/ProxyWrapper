@@ -25,12 +25,16 @@ public class PropertiesController {
     @FXML
     public CheckBox verboseLogging;
 
+	@FXML
+	public CheckBox minimizeOnStartup;
+
     private Stage propertiesWindow;
 
     @FXML
     public void initialize() {
         listeningPort.setText(Integer.toString(config().getLocalPort()));
         enabled.setSelected(config().isEnabled());
+		minimizeOnStartup.setSelected(config().isStartMinimized());
         verboseLogging.setSelected(config().isVerboseLogging());
     }
 
@@ -45,6 +49,7 @@ public class PropertiesController {
             EventBus.get().post(GenericLogEvent.info("Restarting..."));
             EventBus.get().post(new RestartEvent());
         }
+		config().setStartMinimized(minimizeOnStartup.isSelected());
         config().setVerboseLogging(verboseLogging.isSelected());
         Config.save();
 

@@ -127,7 +127,7 @@ public class ProxiesController {
     }
 
     private void refresh() {
-        hostList.getProperties().put(ListViewSkin.RECREATE, Boolean.TRUE);
+        hostList.getProperties().put("listRecreateKey", Boolean.TRUE);
     }
 
     public void setWindow(Stage window) {

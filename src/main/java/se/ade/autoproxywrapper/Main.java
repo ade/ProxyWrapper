@@ -39,7 +39,9 @@ public class Main extends Application {
             primaryStage.setTitle("Mini Proxy");
             loadMain();
             loadLogView();
-            primaryStage.show();
+			if(!Config.config().isStartMinimized()) {
+            	primaryStage.show();
+			}
 
             EventBus.get().post(GenericLogEvent.info("Starting Mini Proxy..."));
 

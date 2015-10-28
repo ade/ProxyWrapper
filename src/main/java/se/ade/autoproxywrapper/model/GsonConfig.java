@@ -11,6 +11,8 @@ public class GsonConfig {
 
     private boolean enabled = true;
 
+	private boolean startMinimized;
+
     private boolean verboseLogging;
 
     public List<ForwardProxy> getForwardProxies() {
@@ -37,7 +39,15 @@ public class GsonConfig {
         this.enabled = enabled;
     }
 
-    public boolean isVerboseLogging() {
+	public boolean isStartMinimized() {
+		return startMinimized;
+	}
+
+	public void setStartMinimized(boolean startMinimized) {
+		this.startMinimized = startMinimized;
+	}
+
+	public boolean isVerboseLogging() {
         return verboseLogging;
     }
 

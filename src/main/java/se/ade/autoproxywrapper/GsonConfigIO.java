@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 public class GsonConfigIO {
 
-    private static final String FILE = System.getProperty("user.dir") + File.separator + "AutoProxyWrapper2.json";
+    private static final String FILE = System.getProperty("user.dir") + File.separator + "AutoProxyWrapper.json";
 
     private static final Gson GSON = new Gson();
 

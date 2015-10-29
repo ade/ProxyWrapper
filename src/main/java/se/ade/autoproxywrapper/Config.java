@@ -10,11 +10,10 @@ public final class Config {
 
     public static GsonConfig config() {
         if(config == null) {
-            config = GsonConfigIO.load();
-            if(config == null) {
+			if (!GsonConfigIO.configExists()) {
                 GsonConfigIO.save(new GsonConfig());
-                config = GsonConfigIO.load();
-            }
+			}
+            config = GsonConfigIO.load();
         }
         return config;
     }

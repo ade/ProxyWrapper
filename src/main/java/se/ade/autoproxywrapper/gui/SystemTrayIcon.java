@@ -1,20 +1,19 @@
 package se.ade.autoproxywrapper.gui;
 
-import com.google.common.eventbus.Subscribe;
-import javafx.application.Platform;
-import se.ade.autoproxywrapper.Main;
-import se.ade.autoproxywrapper.ProxyMode;
-import se.ade.autoproxywrapper.events.EventBus;
-import se.ade.autoproxywrapper.events.SetModeEvent;
-import se.ade.autoproxywrapper.events.ShutDownEvent;
+import static se.ade.autoproxywrapper.Config.config;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import static se.ade.autoproxywrapper.Config.config;
+import javax.imageio.ImageIO;
+
+import com.google.common.eventbus.Subscribe;
+import javafx.application.Platform;
+import se.ade.autoproxywrapper.Main;
+import se.ade.autoproxywrapper.ProxyMode;
+import se.ade.autoproxywrapper.events.*;
 
 public class SystemTrayIcon {
 
@@ -49,15 +48,20 @@ public class SystemTrayIcon {
             popupMenu.add(toggleItem);
             popupMenu.addSeparator();
             popupMenu.add(closeItem);
-            BufferedImage image = ImageIO.read(getClass().getResource("/icon/icon" + (int)tray.getTrayIconSize().getWidth() + ".png"));
-            trayIcon = new TrayIcon(image, "Mini Proxy");
+            BufferedImage image = ImageIO.read(getClass().getResource(getIconFileName()));
+			Dimension trayIconSize = tray.getTrayIconSize();
+			trayIcon = new TrayIcon(image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH), "Mini Proxy");
             trayIcon.addActionListener(getOpenEventHandler());
             trayIcon.setPopupMenu(popupMenu);
             tray.add(trayIcon);
         }
     }
 
-    private ActionListener getOpenEventHandler() {
+	private String getIconFileName() {
+		return System.getProperty("os.name").contains("Linux") ? "/icon/iconflat512.png" : "/icon/icon512.png";
+	}
+
+	private ActionListener getOpenEventHandler() {
         return event -> Platform.runLater(() -> {
             application.getPrimaryStage().show();
             application.getPrimaryStage().toFront();

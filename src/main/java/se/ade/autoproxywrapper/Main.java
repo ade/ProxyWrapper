@@ -35,7 +35,7 @@ public class Main extends Application {
             Platform.setImplicitExit(false);
             EventBus.get().register(this);
             this.primaryStage = primaryStage;
-            primaryStage.getIcons().add(new Image(getClass().getResource("/icon/icon512.png").toExternalForm()));
+            primaryStage.getIcons().add(new Image("/icon/icon512.png"));
             primaryStage.setTitle("Mini Proxy");
             loadMain();
             loadLogView();

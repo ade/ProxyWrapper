@@ -49,6 +49,11 @@ public class LogController {
         });
     }
 
+	@Subscribe
+	public void applicationShowedEvent(ApplicationShowedEvent event) {
+		logScrollPane.setVvalue(logScrollPane.getHeight());
+	}
+
     @Subscribe
     public void genericLogEvent(GenericLogEvent e) {
         if(!e.isVerbose() || config().isVerboseLogging())

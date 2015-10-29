@@ -61,12 +61,9 @@ public class Main extends Application {
 
         Scene scene = new Scene(pane);
         primaryStage.setScene(scene);
-        primaryStage.setOnCloseRequest(event -> {
-            primaryStage.hide();
-        });
-        primaryStage.setOnHiding(event -> {
-            primaryStage.hide();
-        });
+        primaryStage.setOnCloseRequest(event -> primaryStage.hide());
+        primaryStage.setOnHiding(event -> primaryStage.hide());
+		primaryStage.setOnShown(event -> EventBus.get().post(new ApplicationShowedEvent()));
 
         loader.<MenuController>getController().setMain(this);
     }

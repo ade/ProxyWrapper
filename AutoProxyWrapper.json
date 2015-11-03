@@ -1,7 +1,0 @@
-{
-    "forwardProxy": {
-        "host": "secproxy1.sec.intra",
-        "port": 8181
-    },
-    "localListeningPort": 3129
-}

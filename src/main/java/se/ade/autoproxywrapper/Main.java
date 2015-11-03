@@ -20,10 +20,9 @@ import java.util.concurrent.TimeUnit;
 public class Main extends Application {
 
     private ExecutorService pool = Executors.newSingleThreadExecutor();
-
     private Stage primaryStage;
-
     private MiniHttpProxy proxy;
+	private Labels labels = Labels.get();
 
     public static void main(String[] args) {
         launch(args);
@@ -36,14 +35,14 @@ public class Main extends Application {
             EventBus.get().register(this);
             this.primaryStage = primaryStage;
             primaryStage.getIcons().add(new Image("/icon/icon512.png"));
-            primaryStage.setTitle("Mini Proxy");
+            primaryStage.setTitle(labels.get("app.name"));
             loadMain();
             loadLogView();
 			if(!Config.config().isStartMinimized()) {
             	primaryStage.show();
 			}
 
-            EventBus.get().post(GenericLogEvent.info("Starting Mini Proxy..."));
+            EventBus.get().post(GenericLogEvent.info("Starting " + labels.get("app.name") + "..."));
 
             proxy = new MiniHttpProxy();
             pool.submit(proxy);

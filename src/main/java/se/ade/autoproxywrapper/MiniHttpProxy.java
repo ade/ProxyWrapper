@@ -98,7 +98,7 @@ public class MiniHttpProxy implements Runnable{
 
     public void startProxy() {
         if(config().getForwardProxies().isEmpty() || config().getLocalPort() == 0) {
-            EventBus.get().post(GenericLogEvent.info("Please review your properties and proxies."));
+            EventBus.get().post(GenericLogEvent.info("No proxies and/or no local listening port. Please review your properties and proxies."));
             return;
         }
 

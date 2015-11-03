@@ -5,12 +5,13 @@ buildscript {
 }
 
 plugins {
-    id "edu.sc.seis.macAppBundle" version "2.1.2"
+    id "edu.sc.seis.macAppBundle" version "2.1.3"
 }
+
+version = '1.1'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-version = '1.0'
 
 task makeJar(type: Jar) {
     manifest {
@@ -36,6 +37,14 @@ dependencies {
     compile 'com.google.guava:guava:12.0'
     compile 'com.google.code.gson:gson:1.7.2'
     compile 'org.apache.commons:commons-lang3:3.0'
+}
+
+macAppBundle {
+	mainClassName = "se.ade.autoproxywrapper.Main"
+	appName = "AutoProxyWrapper"
+	icon = "assets/icon-apple-512.icns"
+	jvmVersion = 1.8
+	bundleExtras.put("NSHighResolutionCapable", "true")
 }
 
 apply plugin: 'java'

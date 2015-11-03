@@ -4,7 +4,8 @@ Local middle-man proxy that automatically switches between using another proxy o
 
 Usage
 ====================
-- First, add the forward proxy (the proxy you would regularly use) in the settings of the ProxyWrapper, and select a port to listen on. 
+- ProxyWrapper requires the Java 1.8 runtime to be installed. This project uses gradle. To build the project, simply run "./gradlew assemble" in the project directory.
+- Open ProxyWrapper and add the forward proxy (the proxy you would regularly use) in the settings of the app, and select a port to listen on.
 - Then change all your applications' proxy setting once to the proxy wrapper, e.g. 127.0.0.1:3128 (you can configure the port), and you won't need to change proxy settings again when switching networks.
 
 Details

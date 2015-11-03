@@ -35,7 +35,7 @@ public class Main extends Application {
             Platform.setImplicitExit(false);
             EventBus.get().register(this);
             this.primaryStage = primaryStage;
-            primaryStage.getIcons().add(new Image(getClass().getResource("/icon/icon512.png").toExternalForm()));
+            primaryStage.getIcons().add(new Image("/icon/icon512.png"));
             primaryStage.setTitle("Mini Proxy");
             loadMain();
             loadLogView();
@@ -61,12 +61,9 @@ public class Main extends Application {
 
         Scene scene = new Scene(pane);
         primaryStage.setScene(scene);
-        primaryStage.setOnCloseRequest(event -> {
-            primaryStage.hide();
-        });
-        primaryStage.setOnHiding(event -> {
-            primaryStage.hide();
-        });
+        primaryStage.setOnCloseRequest(event -> primaryStage.hide());
+        primaryStage.setOnHiding(event -> primaryStage.hide());
+		primaryStage.setOnShown(event -> EventBus.get().post(new ApplicationShowedEvent()));
 
         loader.<MenuController>getController().setMain(this);
     }

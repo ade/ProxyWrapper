@@ -1,7 +1,5 @@
 package se.ade.autoproxywrapper.gui.controller;
 
-import com.sun.javafx.scene.control.skin.ListViewSkin;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -15,7 +13,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import se.ade.autoproxywrapper.Config;
 import se.ade.autoproxywrapper.events.EventBus;
@@ -37,26 +34,27 @@ public class ProxiesController {
     public TextField newPort;
 
     @FXML
+    public Button addButton;
+
+    @FXML
     public Button saveButton;
 
     private ForwardProxy selectedProxy;
-    private ObservableList<ForwardProxy> items = FXCollections.observableArrayList(Extractor.get());
+    private ObservableList<ForwardProxy> items = FXCollections.observableArrayList();
     private Stage window;
-
-    private static class Extractor {
-        public static Callback<ForwardProxy, Observable[]> get() {
-            return param -> new Observable[]{};
-        }
-    }
 
     @FXML
     public void initialize() {
-        hostList.setPlaceholder(getPlaceholder());
+        hostList.setPlaceholder(new Label("No proxies configured."));
         hostList.getSelectionModel().selectedItemProperty().addListener(getForwardProxyChangeListener());
         hostList.setCellFactory(param -> new ForwardProxyListCell());
         Bindings.bindContent(hostList.getItems(), items);
 
         items.addAll(config().getForwardProxies());
+    }
+
+    private ChangeListener<ForwardProxy> getForwardProxyChangeListener() {
+        return (observable, oldValue, newValue) -> select(newValue);
     }
 
     @FXML
@@ -67,8 +65,15 @@ public class ProxiesController {
         if (!validateInput()) {
             return;
         }
-        selectedProxy.setHost(newHostName.getText());
-        selectedProxy.setPort(Integer.parseInt(newPort.getText()));
+        if (selectedProxy != null) {
+            selectedProxy.setHost(newHostName.getText());
+            selectedProxy.setPort(Integer.parseInt(newPort.getText()));
+        } else {
+            ForwardProxy newForwardProxy = new ForwardProxy(newHostName.getText(), Integer.parseInt(newPort.getText()));
+            items.add(newForwardProxy);
+            newHostName.requestFocus();
+        }
+        deselect();
         refresh();
     }
 
@@ -104,26 +109,28 @@ public class ProxiesController {
         return true;
     }
 
-    private ChangeListener<ForwardProxy> getForwardProxyChangeListener() {
-        return (observable, oldValue, newValue) -> {
-            selectedProxy = newValue;
-            newHostName.setText(selectedProxy.getHost());
-            newPort.setText(Integer.toString(selectedProxy.getPort()));
-            newHostName.setDisable(false);
-            newPort.setDisable(false);
-            saveButton.setDisable(false);
-        };
+    private void resetValidation() {
+        newHostName.getStyleClass().remove("invalid-field");
+        newPort.getStyleClass().remove("invalid-field");
     }
 
-    private Label getPlaceholder() {
-        Label label = new Label("No proxies configured. Click here to add one.");
-        label.setOnMouseClicked(event -> {
-            ForwardProxy newForwardProxy = new ForwardProxy("", 0);
-            items.add(newForwardProxy);
-            hostList.getSelectionModel().select(newForwardProxy);
-            newHostName.requestFocus();
-        });
-        return label;
+    private void select(ForwardProxy proxy) {
+        selectedProxy = proxy;
+        newHostName.setText(selectedProxy.getHost());
+        newPort.setText(Integer.toString(selectedProxy.getPort()));
+        addButton.setVisible(false);
+        saveButton.setVisible(true);
+        resetValidation();
+    }
+
+    private void deselect() {
+        selectedProxy = null;
+        newHostName.setText("");
+        newPort.setText("");
+        hostList.getSelectionModel().select(null);
+        saveButton.setVisible(false);
+        addButton.setVisible(true);
+        resetValidation();
     }
 
     private void refresh() {
@@ -138,31 +145,20 @@ public class ProxiesController {
 
         @Override
         protected void updateItem(ForwardProxy item, boolean empty) {
-            ContextMenu contextMenu = new ContextMenu();
             if (empty) {
                 setText("");
-
-                MenuItem addMenuItem = new MenuItem("Add", new ImageView(getClass().getResource("/icon/Plus.png").toExternalForm()));
-                addMenuItem.setOnAction(getAddEvent());
-                contextMenu.getItems().add(addMenuItem);
+                setOnMouseClicked(event -> deselect());
             } else {
-                setText(item.getHost() + ":" + item.getPort());
-
+                ContextMenu contextMenu = new ContextMenu();
                 MenuItem removeMenuItem = new MenuItem("Remove", new ImageView(getClass().getResource("/icon/Minus.png").toExternalForm()));
                 removeMenuItem.setOnAction(getRemoveEvent());
                 contextMenu.getItems().add(removeMenuItem);
-            }
-            setContextMenu(contextMenu);
-            super.updateItem(item, empty);
-        }
+                setContextMenu(contextMenu);
 
-        private EventHandler<ActionEvent> getAddEvent() {
-            return event -> {
-                ForwardProxy newForwardProxy = new ForwardProxy("", 0);
-                items.add(newForwardProxy);
-                hostList.getSelectionModel().select(newForwardProxy);
-                newHostName.requestFocus();
-            };
+                setText(item.getHost() + ":" + item.getPort());
+                setOnMouseClicked(null);
+            }
+            super.updateItem(item, empty);
         }
 
         private EventHandler<ActionEvent> getRemoveEvent() {
@@ -170,6 +166,7 @@ public class ProxiesController {
                 for (ForwardProxy proxy : items) {
                     if (proxy.equals(hostList.getSelectionModel().getSelectedItem())) {
                         items.remove(proxy);
+                        deselect();
                         break;
                     }
                 }

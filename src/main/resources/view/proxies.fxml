@@ -7,7 +7,6 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="se.ade.autoproxywrapper.gui.controller.ProxiesController">
    <children>
       <GridPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="300.0" prefWidth="500.0" stylesheets="@forms.css">
@@ -29,9 +28,10 @@
             <Label text="Forward proxy hosts:" />
             <Label text="Hostname:" GridPane.rowIndex="2" />
             <Label text="Port:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <TextField fx:id="newHostName" disable="true" onKeyReleased="#saveForwardProxy" GridPane.rowIndex="3" />
-            <TextField fx:id="newPort" disable="true" onKeyReleased="#saveForwardProxy" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-            <Button fx:id="saveButton" defaultButton="true" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMouseClicked="#saveForwardProxy" text="Update" GridPane.columnIndex="4" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+            <TextField fx:id="newHostName" onKeyReleased="#saveForwardProxy" GridPane.rowIndex="3" />
+            <TextField fx:id="newPort" onKeyReleased="#saveForwardProxy" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+            <Button fx:id="addButton" defaultButton="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMouseClicked="#saveForwardProxy" text="Add" GridPane.columnIndex="4" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+            <Button fx:id="saveButton" defaultButton="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMouseClicked="#saveForwardProxy" text="Update" visible="false" GridPane.columnIndex="4" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
          </children>
       </GridPane>
       <AnchorPane>

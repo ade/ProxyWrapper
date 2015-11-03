@@ -1,34 +1,41 @@
-apply plugin: 'java'
-apply plugin: 'macAppBundle'
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+plugins {
+    id "edu.sc.seis.macAppBundle" version "2.1.2"
+}
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 version = '1.0'
+
+task makeJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': project.name,
+                'Implementation-Version': version,
+                'Main-Class': 'se.ade.autoproxywrapper.Main'
+    }
+    baseName = project.name
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    with jar
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile files('libs/littleproxy-SNAPSHOT-20141208.jar');
-    compile 'org.json:json:20090211'
+    compile 'org.littleshoot:littleproxy:1.1.0-beta1'
     compile 'com.google.guava:guava:12.0'
+    compile 'com.google.code.gson:gson:1.7.2'
+    compile 'org.apache.commons:commons-lang3:3.0'
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.github.zutherb.gradle:gradle-macappbundle:0.1'
-    }
-}
-
-macAppBundle {
-    mainClassName = "se.ade.autoproxywrapper.Main"
-    appName = "AutoProxyWrapper"
-    icon = "assets/icon-apple-512.icns"
-    jvmVersion = 1.7
-    bundleExtras.put("NSHighResolutionCapable", "true")
-}
+apply plugin: 'java'

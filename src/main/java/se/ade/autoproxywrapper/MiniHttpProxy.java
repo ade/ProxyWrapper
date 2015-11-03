@@ -9,43 +9,53 @@ import io.netty.handler.codec.http.HttpResponse;
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import se.ade.autoproxywrapper.events.*;
+import se.ade.autoproxywrapper.model.ForwardProxy;
 
-import java.awt.*;
 import java.net.InetSocketAddress;
 import java.util.Queue;
 
-public class MiniHttpProxy {
-    final static long DNS_LOOKUP_INTERVAL = 5000;
+import static se.ade.autoproxywrapper.Config.config;
 
-    boolean enableLogging = false;
-    private final Config config;
+public class MiniHttpProxy implements Runnable{
+    private final static long DNS_LOOKUP_INTERVAL = 5000;
 
     private Object eventListener = new Object() {
         @Subscribe
-        public void onEvent(SetLoggingEnabledEvent e) {
-            enableLogging = e.enabled;
+        public void onEvent(RestartEvent e) {
+            stopProxy();
+            startProxy();
         }
 
         @Subscribe
         public void onEvent(ShutDownEvent e) {
-            EventBus.get().unregister(eventListener);
+            stopProxy();
         }
     };
 
-    Boolean isProxyResolvable;
-    Boolean lastProxyState;
-    boolean isResolving;
-    long lastDnsQuery = 0;
-    InetSocketAddress forwardProxyAddress; //Cache of the proxy address object
+    private Boolean isProxyResolvable;
+    private boolean isResolving;
+    private long lastDnsQuery = 0;
+    private InetSocketAddress forwardProxyAddress; //Cache of the proxy address object
 
-    LocationProber locationProber = new LocationProber();
+    private LocationProber locationProber = new LocationProber();
+
+    private ProxyMode currentMode = ProxyMode.AUTO;
+    private HttpProxyServer proxyServer;
 
     public MiniHttpProxy() {
-        this.config = new Config("AutoProxyWrapper.json").readFromFile().saveToFile();
         EventBus.get().register(eventListener);
     }
 
     private void refreshProxyState() {
+        if(!config().isEnabled()) {
+            forwardProxyAddress = null;
+            isProxyResolvable = false;
+            if(currentMode != ProxyMode.DISABLED) {
+                EventBus.get().post(GenericLogEvent.info("In bypass mode"));
+                currentMode = ProxyMode.DISABLED;
+            }
+            return;
+        }
         if(!isResolving) {
             if (System.currentTimeMillis() > lastDnsQuery + DNS_LOOKUP_INTERVAL) {
                 isResolving = true;
@@ -53,24 +63,30 @@ public class MiniHttpProxy {
                     @Override
                     public void run() {
                         try {
-                            if (enableLogging) System.out.println("Checking if there is a proxy...");
-
-                            isProxyResolvable = locationProber.isAddressResolvable(config.forwardProxyHost);
-                            if (lastProxyState != isProxyResolvable) {
-                                System.out.println("New forward proxy state: " + isProxyResolvable);
-
-                                forwardProxyAddress = new InetSocketAddress(config.forwardProxyHost, config.forwardProxyPort);
-
-                                ProxyMode mode = isProxyResolvable ? ProxyMode.USE_PROXY : ProxyMode.DIRECT;
-
-                                EventBus.get().post(new DetectModeEvent(mode));
+                            boolean isProxyFound = false;
+                            for(ForwardProxy proxy: config().getForwardProxies()) {
+                                isProxyResolvable = locationProber.isAddressResolvable(proxy.getHost());
+                                if (isProxyResolvable) {
+                                    isProxyFound = true;
+                                    InetSocketAddress inetSocketAddress = new InetSocketAddress(proxy.getHost(), proxy.getPort());
+                                    if(forwardProxyAddress == null || !forwardProxyAddress.equals(inetSocketAddress)) {
+                                        forwardProxyAddress = inetSocketAddress;
+                                        currentMode = ProxyMode.USE_PROXY;
+                                        EventBus.get().post(new DetectModeEvent(ProxyMode.USE_PROXY, forwardProxyAddress));
+                                    }
+                                    break;
+                                }
+                                lastDnsQuery = System.currentTimeMillis();
                             }
-                            lastProxyState = isProxyResolvable;
-                            lastDnsQuery = System.currentTimeMillis();
-
-                            if (enableLogging) System.out.println("Forward proxy resolvable: " + isProxyResolvable);
+                            if(!isProxyFound) {
+                                forwardProxyAddress = null;
+                                if(currentMode != ProxyMode.DIRECT) {
+                                    EventBus.get().post(new DetectModeEvent(ProxyMode.DIRECT, null));
+                                    currentMode = ProxyMode.DIRECT;
+                                }
+                            }
                         } catch (Exception e) {
-                            System.out.print("Error in refreshProxyState: " + e.getMessage());
+                            EventBus.get().post(GenericLogEvent.info("Error in refreshProxyState: " + e.getMessage()));
                         } finally {
                             isResolving = false;
                         }
@@ -81,8 +97,8 @@ public class MiniHttpProxy {
     }
 
     public void startProxy() {
-        if(this.config.forwardProxyHost == null || this.config.forwardProxyHost.isEmpty() || this.config.forwardProxyPort == 0 || this.config.localListeningPort == 0) {
-            System.out.println("Config appears to be wrong. Edit AutoProxyWrapper.json.");
+        if(config().getForwardProxies().isEmpty() || config().getLocalPort() == 0) {
+            EventBus.get().post(GenericLogEvent.info("Please review your properties and proxies."));
             return;
         }
 
@@ -115,55 +131,46 @@ public class MiniHttpProxy {
                 chainedProxies.add(ChainedProxyAdapter.FALLBACK_TO_DIRECT_CONNECTION);
 
                 //Add proxy again last if direct fails and times out.
-                chainedProxies.add(forwardProxy);
+                if (isProxyResolvable) {
+                    chainedProxies.add(forwardProxy);
+                }
             }
         };
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
-                .withPort(config.localListeningPort)
+                .withPort(config().getLocalPort())
+                .withConnectTimeout(10000)
                 .withChainProxyManager(chainedProxyManager);
-
 
         bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                 return new HttpFiltersAdapter(originalRequest) {
                     @Override
                     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
-                        if (enableLogging) {
-                            if (httpObject instanceof DefaultHttpRequest) {
-                                DefaultHttpRequest defaultHttpRequest = (DefaultHttpRequest) httpObject;
-                                EventBus.get().post(new RequestEvent(defaultHttpRequest.getMethod().toString(), defaultHttpRequest.getUri()));
-
-                                /*
-                                System.out.println("Requesting: " + defaultHttpRequest.getMethod()
-                                                + " "
-                                                + defaultHttpRequest.getUri()
-                                );
-                                */
-                            }
+                        if (httpObject instanceof DefaultHttpRequest) {
+                            DefaultHttpRequest defaultHttpRequest = (DefaultHttpRequest) httpObject;
+                            EventBus.get().post(new RequestEvent(defaultHttpRequest.getMethod().toString(), defaultHttpRequest.getUri()));
                         }
                         return null;
-                    }
-
-                    @Override
-                    public HttpResponse proxyToServerRequest(HttpObject httpObject) {
-                        return null;
-                    }
-
-                    @Override
-                    public HttpObject serverToProxyResponse(HttpObject httpObject) {
-                        return httpObject;
-                    }
-
-                    @Override
-                    public HttpObject proxyToClientResponse(HttpObject httpObject) {
-                        return httpObject;
                     }
                 };
             }
         });
 
+        proxyServer = bootstrap.start();
+    }
 
-        bootstrap.start();
+    public void stopProxy() {
+        if (proxyServer != null) {
+            proxyServer.abort();
+            forwardProxyAddress = null;
+            currentMode = ProxyMode.AUTO;
+            proxyServer = null;
+        }
+    }
+
+    @Override
+    public void run() {
+        startProxy();
     }
 }

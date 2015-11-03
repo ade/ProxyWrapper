@@ -1,7 +1,5 @@
 package se.ade.autoproxywrapper.events;
 
-import java.util.LinkedList;
-
 /**
  * Created by adrnil on 11/12/14.
  */

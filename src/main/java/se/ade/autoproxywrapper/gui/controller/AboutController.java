@@ -31,7 +31,7 @@ public class AboutController {
 
             Stage stage = new Stage(UNDECORATED);
             stage.setResizable(false);
-            Scene scene = new Scene(view, 250, 320);
+            Scene scene = new Scene(view, 265, 330);
             stage.setScene(scene);
             stage.show();
 			stage.requestFocus();

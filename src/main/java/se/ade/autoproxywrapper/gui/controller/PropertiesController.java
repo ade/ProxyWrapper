@@ -5,14 +5,14 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.StringUtils;
-import se.ade.autoproxywrapper.Config;
+import se.ade.autoproxywrapper.config.Config;
 import se.ade.autoproxywrapper.ProxyMode;
 import se.ade.autoproxywrapper.events.EventBus;
 import se.ade.autoproxywrapper.events.GenericLogEvent;
 import se.ade.autoproxywrapper.events.RestartEvent;
 import se.ade.autoproxywrapper.events.SetModeEvent;
 
-import static se.ade.autoproxywrapper.Config.config;
+import static se.ade.autoproxywrapper.config.Config.get;
 
 public class PropertiesController {
 
@@ -32,10 +32,10 @@ public class PropertiesController {
 
     @FXML
     public void initialize() {
-        listeningPort.setText(Integer.toString(config().getLocalPort()));
-        enabled.setSelected(config().isEnabled());
-		minimizeOnStartup.setSelected(config().isStartMinimized());
-        verboseLogging.setSelected(config().isVerboseLogging());
+        listeningPort.setText(Integer.toString(get().getLocalPort()));
+        enabled.setSelected(get().isEnabled());
+		minimizeOnStartup.setSelected(get().isStartMinimized());
+        verboseLogging.setSelected(get().isVerboseLogging());
     }
 
     @FXML
@@ -44,16 +44,16 @@ public class PropertiesController {
             return;
         }
         int newLocalPort = Integer.parseInt(listeningPort.getText());
-        if(config().getLocalPort() != newLocalPort) {
-            config().setLocalPort(newLocalPort);
+        if(get().getLocalPort() != newLocalPort) {
+            get().setLocalPort(newLocalPort);
             EventBus.get().post(GenericLogEvent.info("Restarting..."));
             EventBus.get().post(new RestartEvent());
         }
-		config().setStartMinimized(minimizeOnStartup.isSelected());
-        config().setVerboseLogging(verboseLogging.isSelected());
+		get().setStartMinimized(minimizeOnStartup.isSelected());
+        get().setVerboseLogging(verboseLogging.isSelected());
         Config.save();
 
-        if(enabled.isSelected() != config().isEnabled()) {
+        if(enabled.isSelected() != get().isEnabled()) {
             EventBus.get().post(new SetModeEvent(enabled.isSelected() ? ProxyMode.AUTO : ProxyMode.DISABLED));
         }
 

@@ -1,6 +1,6 @@
 package se.ade.autoproxywrapper.gui;
 
-import static se.ade.autoproxywrapper.Config.config;
+import static se.ade.autoproxywrapper.config.Config.get;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -38,10 +38,10 @@ public class SystemTrayIcon {
             MenuItem closeItem = new MenuItem(labels.get("actions.exit"));
             closeItem.addActionListener(getCloseEventHandler());
 
-            currentStateItem = new MenuItem(getStateText(config().isEnabled()));
+            currentStateItem = new MenuItem(getStateText(get().isEnabled()));
             currentStateItem.setEnabled(false);
 
-            toggleItem = new MenuItem(getToggleText(config().isEnabled()));
+            toggleItem = new MenuItem(getToggleText(get().isEnabled()));
             toggleItem.addActionListener(getEnableEventHandler());
 
             popupMenu.add(showItem);

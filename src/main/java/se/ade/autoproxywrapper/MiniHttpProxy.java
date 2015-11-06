@@ -140,7 +140,8 @@ public class MiniHttpProxy implements Runnable{
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
                 .withPort(config().getLocalPort())
                 .withConnectTimeout(10000)
-                .withChainProxyManager(chainedProxyManager);
+                .withChainProxyManager(chainedProxyManager)
+                .plusActivityTracker(new ProxyActivityTracker());
 
         bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {

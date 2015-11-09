@@ -14,7 +14,7 @@ import se.ade.autoproxywrapper.model.ForwardProxy;
 import java.net.InetSocketAddress;
 import java.util.Queue;
 
-import static se.ade.autoproxywrapper.Config.config;
+import static se.ade.autoproxywrapper.config.Config.get;
 
 public class MiniHttpProxy implements Runnable{
     private final static long DNS_LOOKUP_INTERVAL = 5000;
@@ -47,7 +47,7 @@ public class MiniHttpProxy implements Runnable{
     }
 
     private void refreshProxyState() {
-        if(!config().isEnabled()) {
+        if(!get().isEnabled()) {
             forwardProxyAddress = null;
             isProxyResolvable = false;
             if(currentMode != ProxyMode.DISABLED) {
@@ -64,7 +64,7 @@ public class MiniHttpProxy implements Runnable{
                     public void run() {
                         try {
                             boolean isProxyFound = false;
-                            for(ForwardProxy proxy: config().getForwardProxies()) {
+                            for(ForwardProxy proxy: get().getForwardProxies()) {
                                 isProxyResolvable = locationProber.isAddressResolvable(proxy.getHost());
                                 if (isProxyResolvable) {
                                     isProxyFound = true;
@@ -97,7 +97,7 @@ public class MiniHttpProxy implements Runnable{
     }
 
     public void startProxy() {
-        if(config().getForwardProxies().isEmpty() || config().getLocalPort() == 0) {
+        if(get().getForwardProxies().isEmpty() || get().getLocalPort() == 0) {
             EventBus.get().post(GenericLogEvent.info("No proxies and/or no local listening port. Please review your properties and proxies."));
             return;
         }
@@ -138,7 +138,7 @@ public class MiniHttpProxy implements Runnable{
         };
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
-                .withPort(config().getLocalPort())
+                .withPort(get().getLocalPort())
                 .withConnectTimeout(10000)
                 .withChainProxyManager(chainedProxyManager)
                 .plusActivityTracker(new ProxyActivityTracker());

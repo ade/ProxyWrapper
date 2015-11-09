@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.LinkedList;
 
-import static se.ade.autoproxywrapper.Config.config;
+import static se.ade.autoproxywrapper.config.Config.get;
 
 public class LogController {
 
@@ -56,7 +56,7 @@ public class LogController {
 
     @Subscribe
     public void genericLogEvent(GenericLogEvent e) {
-        if(!e.isVerbose() || config().isVerboseLogging())
+        if(!e.isVerbose() || get().isVerboseLogging())
         addText(e.message);
     }
 
@@ -69,7 +69,7 @@ public class LogController {
 
     @Subscribe
     public void requestEvent(RequestEvent e) {
-        if(config().isVerboseLogging()) {
+        if(get().isVerboseLogging()) {
             addText(e.method + " " + e.url);
         }
     }

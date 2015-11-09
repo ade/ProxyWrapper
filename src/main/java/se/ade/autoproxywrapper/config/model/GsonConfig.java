@@ -1,4 +1,6 @@
-package se.ade.autoproxywrapper.model;
+package se.ade.autoproxywrapper.config.model;
+
+import se.ade.autoproxywrapper.model.ForwardProxy;
 
 import java.util.ArrayList;
 import java.util.List;

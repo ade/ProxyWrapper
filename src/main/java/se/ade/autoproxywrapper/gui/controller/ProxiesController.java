@@ -14,13 +14,13 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.StringUtils;
-import se.ade.autoproxywrapper.Config;
+import se.ade.autoproxywrapper.config.Config;
 import se.ade.autoproxywrapper.events.EventBus;
 import se.ade.autoproxywrapper.events.GenericLogEvent;
 import se.ade.autoproxywrapper.events.RestartEvent;
 import se.ade.autoproxywrapper.model.ForwardProxy;
 
-import static se.ade.autoproxywrapper.Config.config;
+import static se.ade.autoproxywrapper.config.Config.get;
 
 public class ProxiesController {
 
@@ -50,7 +50,7 @@ public class ProxiesController {
         hostList.setCellFactory(param -> new ForwardProxyListCell());
         Bindings.bindContent(hostList.getItems(), items);
 
-        items.addAll(config().getForwardProxies());
+        items.addAll(get().getForwardProxies());
     }
 
     private ChangeListener<ForwardProxy> getForwardProxyChangeListener() {
@@ -84,7 +84,7 @@ public class ProxiesController {
 
     @FXML
     public void save() {
-        config().setForwardProxies(items);
+        get().setForwardProxies(items);
         Config.save();
         window.close();
         EventBus.get().post(GenericLogEvent.info("Restarting..."));

@@ -1,8 +1,10 @@
 package se.ade.autoproxywrapper;
 
+import java.io.IOException;
+import java.util.concurrent.*;
+
 import com.google.common.eventbus.Subscribe;
-import javafx.application.Application;
-import javafx.application.Platform;
+import javafx.application.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -12,18 +14,15 @@ import se.ade.autoproxywrapper.config.Config;
 import se.ade.autoproxywrapper.events.*;
 import se.ade.autoproxywrapper.gui.SystemTrayIcon;
 import se.ade.autoproxywrapper.gui.controller.MenuController;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import se.ade.autoproxywrapper.statistics.StatisticsTask;
 
 public class Main extends Application {
 
 	private ExecutorService pool = Executors.newSingleThreadExecutor();
+	private ScheduledExecutorService schedule = Executors.newSingleThreadScheduledExecutor();
+
 	private Stage primaryStage;
 	private MiniHttpProxy proxy;
-	private Labels labels = Labels.get();
 
 	public static void main(String[] args) {
 		launch(args);
@@ -36,17 +35,18 @@ public class Main extends Application {
 			EventBus.get().register(this);
 			this.primaryStage = primaryStage;
 			primaryStage.getIcons().add(new Image("/icon/icon512.png"));
-			primaryStage.setTitle(labels.get("app.name"));
+			primaryStage.setTitle(Labels.get("app.name"));
 			loadMain();
 			loadLogView();
 			if(!Config.get().isStartMinimized()) {
 				primaryStage.show();
 			}
 
-			EventBus.get().post(GenericLogEvent.info("Starting " + labels.get("app.name") + "..."));
+			EventBus.get().post(GenericLogEvent.info("Starting " + Labels.get("app.name") + "..."));
 
 			proxy = new MiniHttpProxy();
 			pool.submit(proxy);
+			schedule.scheduleAtFixedRate(new StatisticsTask(proxy), 10, 10, TimeUnit.MINUTES);
 			new SystemTrayIcon(this);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -79,9 +79,11 @@ public class Main extends Application {
 	public void closeApplication() {
 		Platform.exit();
 		primaryStage.close();
+		schedule.shutdownNow();
 		pool.shutdownNow();
 		try {
 			pool.awaitTermination(3, TimeUnit.SECONDS);
+			schedule.awaitTermination(3, TimeUnit.SECONDS);
 			System.exit(0);
 		} catch (InterruptedException e) {
 			System.exit(1);

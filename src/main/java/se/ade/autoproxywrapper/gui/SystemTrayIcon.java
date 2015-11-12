@@ -11,9 +11,7 @@ import javax.imageio.ImageIO;
 
 import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
-import se.ade.autoproxywrapper.Labels;
-import se.ade.autoproxywrapper.Main;
-import se.ade.autoproxywrapper.ProxyMode;
+import se.ade.autoproxywrapper.*;
 import se.ade.autoproxywrapper.events.*;
 
 public class SystemTrayIcon {
@@ -22,7 +20,6 @@ public class SystemTrayIcon {
     private MenuItem currentStateItem;
     private MenuItem toggleItem;
     private Main application;
-	private Labels labels = Labels.get();
 
     public SystemTrayIcon(Main main) throws IOException, AWTException {
         this.application = main;
@@ -32,10 +29,10 @@ public class SystemTrayIcon {
             SystemTray tray = SystemTray.getSystemTray();
 
             PopupMenu popupMenu = new PopupMenu();
-            MenuItem showItem = new MenuItem(labels.get("actions.open-app"));
+            MenuItem showItem = new MenuItem(Labels.get("actions.open-app"));
             showItem.addActionListener(getOpenEventHandler());
 
-            MenuItem closeItem = new MenuItem(labels.get("actions.exit"));
+            MenuItem closeItem = new MenuItem(Labels.get("actions.exit"));
             closeItem.addActionListener(getCloseEventHandler());
 
             currentStateItem = new MenuItem(getStateText(get().isEnabled()));
@@ -52,7 +49,7 @@ public class SystemTrayIcon {
             popupMenu.add(closeItem);
             BufferedImage image = ImageIO.read(getClass().getResource(getIconFileName()));
 			Dimension trayIconSize = tray.getTrayIconSize();
-			trayIcon = new TrayIcon(image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH), labels.get("app.name"));
+			trayIcon = new TrayIcon(image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH), Labels.get("app.name"));
             trayIcon.addActionListener(getOpenEventHandler());
             trayIcon.setPopupMenu(popupMenu);
             tray.add(trayIcon);
@@ -73,7 +70,7 @@ public class SystemTrayIcon {
 
     private ActionListener getEnableEventHandler() {
         return event -> Platform.runLater(() -> {
-            if(toggleItem.getLabel().equals(labels.get("mode.change-to-auto"))) {
+            if(toggleItem.getLabel().equals(Labels.get("mode.change-to-auto"))) {
                 EventBus.get().post(new SetModeEvent(ProxyMode.AUTO));
             } else {
                 EventBus.get().post(new SetModeEvent(ProxyMode.DISABLED));
@@ -88,11 +85,11 @@ public class SystemTrayIcon {
     }
 
     private String getStateText(boolean enabled) {
-        return labels.get("generic.proxy-mode") + ": " + (enabled ? labels.get("mode.auto") : labels.get("mode.direct"));
+        return Labels.get("generic.proxy-mode") + ": " + (enabled ? Labels.get("mode.auto") : Labels.get("mode.direct"));
     }
 
     private String getToggleText(boolean enabled) {
-        return enabled ? labels.get("mode.change-to-direct") : labels.get("mode.change-to-auto");
+        return enabled ? Labels.get("mode.change-to-direct") : Labels.get("mode.change-to-auto");
     }
 
     @Subscribe

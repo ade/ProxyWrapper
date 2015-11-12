@@ -1,59 +1,27 @@
 package se.ade.autoproxywrapper;
 
-import io.netty.handler.codec.http.*;
 import org.littleshoot.proxy.*;
+import se.ade.autoproxywrapper.statistics.*;
 
-import javax.net.ssl.SSLSession;
-import java.net.InetSocketAddress;
+public class ProxyActivityTracker extends ActivityTrackerAdapter {
 
-public class ProxyActivityTracker implements ActivityTracker{
+	private Statistics statistics;
 
-    @Override
-    public void clientConnected(InetSocketAddress clientAddress) {}
+	public ProxyActivityTracker() {
+		statistics = StatisticsStorage.instance().getStatistics();
+	}
 
-    @Override
-    public void clientSSLHandshakeSucceeded(InetSocketAddress clientAddress, SSLSession sslSession) {}
+	public Statistics getStatistics() {
+		return statistics;
+	}
 
-    @Override
-    public void clientDisconnected(InetSocketAddress clientAddress, SSLSession sslSession) {}
+	@Override
+	public void bytesReceivedFromClient(FlowContext flowContext, int numberOfBytes) {
+		statistics.addBytesSent(numberOfBytes);
+	}
 
-    @Override
-    public void bytesReceivedFromClient(FlowContext flowContext, int numberOfBytes) {
-        System.out.println("Bytes bytesReceivedFromClient: " + numberOfBytes);
-    }
-
-    @Override
-    public void requestReceivedFromClient(FlowContext flowContext, HttpRequest httpRequest) {
-        System.out.println("Request requestReceivedFromClient: " + httpRequest.getUri());
-    }
-
-    @Override
-    public void bytesSentToServer(FullFlowContext flowContext, int numberOfBytes) {
-        System.out.println("Bytes bytesSentToServer: " + numberOfBytes);
-    }
-
-    @Override
-    public void requestSentToServer(FullFlowContext flowContext, HttpRequest httpRequest) {
-        System.out.println("Request requestSentToServer: " + httpRequest.getUri());
-    }
-
-    @Override
-    public void bytesReceivedFromServer(FullFlowContext flowContext, int numberOfBytes) {
-        System.out.println("Bytes bytesReceivedFromServer: " + numberOfBytes);
-    }
-
-    @Override
-    public void responseReceivedFromServer(FullFlowContext flowContext, HttpResponse httpResponse) {
-        System.out.println("Request responseReceivedFromServer: " + httpResponse.getStatus().code());
-    }
-
-    @Override
-    public void bytesSentToClient(FlowContext flowContext, int numberOfBytes) {
-        System.out.println("Bytes bytesSentToClient: " + numberOfBytes);
-    }
-
-    @Override
-    public void responseSentToClient(FlowContext flowContext, HttpResponse httpResponse) {
-        System.out.println("Request responseSentToClient: " + httpResponse.getStatus().code());
-    }
+	@Override
+	public void bytesSentToClient(FlowContext flowContext, int numberOfBytes) {
+		statistics.addBytesReceived(numberOfBytes);
+	}
 }

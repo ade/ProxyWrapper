@@ -10,6 +10,7 @@ import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import se.ade.autoproxywrapper.events.*;
 import se.ade.autoproxywrapper.model.ForwardProxy;
+import se.ade.autoproxywrapper.statistics.*;
 
 import java.net.InetSocketAddress;
 import java.util.Queue;
@@ -41,6 +42,8 @@ public class MiniHttpProxy implements Runnable{
 
     private ProxyMode currentMode = ProxyMode.AUTO;
     private HttpProxyServer proxyServer;
+
+	private ProxyActivityTracker proxyActivityTracker = new ProxyActivityTracker();
 
     public MiniHttpProxy() {
         EventBus.get().register(eventListener);
@@ -141,7 +144,7 @@ public class MiniHttpProxy implements Runnable{
                 .withPort(get().getLocalPort())
                 .withConnectTimeout(10000)
                 .withChainProxyManager(chainedProxyManager)
-                .plusActivityTracker(new ProxyActivityTracker());
+                .plusActivityTracker(proxyActivityTracker);
 
         bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
@@ -164,13 +167,20 @@ public class MiniHttpProxy implements Runnable{
     public void stopProxy() {
         if (proxyServer != null) {
             proxyServer.abort();
+
+			StatisticsStorage.instance().insertStatistics(proxyActivityTracker.getStatistics());
+
             forwardProxyAddress = null;
             currentMode = ProxyMode.AUTO;
             proxyServer = null;
         }
     }
 
-    @Override
+	public Statistics getStatistics() {
+		return proxyActivityTracker.getStatistics();
+	}
+
+	@Override
     public void run() {
         startProxy();
     }

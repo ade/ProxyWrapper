@@ -1,0 +1,16 @@
+.chart-series-line {
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+
+.default-color0.chart-series-line { -fx-stroke: #88CC88; }
+.default-color1.chart-series-line { -fx-stroke: #004400; }
+
+.default-color0.chart-line-symbol { -fx-background-color: #88CC88, white; }
+.default-color1.chart-line-symbol { -fx-background-color: #004400, white; }
+
+.default-color0.chart-bar { -fx-bar-fill: #88CC88; }
+.default-color1.chart-bar { -fx-bar-fill: #004400; }
+
+.default-color0.chart-bar-symbol { -fx-background-color: #88CC88, white; }
+.default-color1.chart-bar-symbol { -fx-background-color: #004400, white; }

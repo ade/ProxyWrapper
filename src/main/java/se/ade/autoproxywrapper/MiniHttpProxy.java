@@ -168,7 +168,9 @@ public class MiniHttpProxy implements Runnable{
         if (proxyServer != null) {
             proxyServer.abort();
 
-			StatisticsStorage.instance().insertStatistics(proxyActivityTracker.getStatistics());
+			StatisticsStorage statisticsStorage = StatisticsStorage.instance();
+			statisticsStorage.insertStatistics(proxyActivityTracker.getStatistics());
+			statisticsStorage.close();
 
             forwardProxyAddress = null;
             currentMode = ProxyMode.AUTO;

@@ -1,11 +1,21 @@
 package se.ade.autoproxywrapper.statistics;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 public class Statistics implements Serializable{
 
+	private LocalDate date;
 	private long bytesSent = 0;
 	private long bytesReceived = 0;
+
+	public LocalDate getDate() {
+		return date;
+	}
+
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
 
 	public long getBytesSent() {
 		return bytesSent;

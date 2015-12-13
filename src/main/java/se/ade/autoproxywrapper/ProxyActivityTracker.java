@@ -8,7 +8,9 @@ public class ProxyActivityTracker extends ActivityTrackerAdapter {
 	private Statistics statistics;
 
 	public ProxyActivityTracker() {
-		statistics = StatisticsStorage.instance().getStatistics();
+		StatisticsStorage statisticsStorage = StatisticsStorage.instance();
+		statistics = statisticsStorage.getCurrentStatistics();
+		statisticsStorage.close();
 	}
 
 	public Statistics getStatistics() {

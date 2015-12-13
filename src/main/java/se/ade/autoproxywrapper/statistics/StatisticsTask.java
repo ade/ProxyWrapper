@@ -13,7 +13,9 @@ public class StatisticsTask implements Runnable{
 
 	@Override
 	public void run() {
-		StatisticsStorage.instance().insertStatistics(miniHttpProxy.getStatistics());
+		StatisticsStorage statisticsStorage = StatisticsStorage.instance();
+		statisticsStorage.insertStatistics(miniHttpProxy.getStatistics());
+		statisticsStorage.close();
 		EventBus.get().post(GenericLogEvent.verbose("Saved statistics data"));
 	}
 }

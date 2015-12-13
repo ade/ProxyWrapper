@@ -8,8 +8,7 @@ import se.ade.autoproxywrapper.events.*;
 
 public abstract class SQLiteStorage {
 
-	public static final String CREATE_BYTES_SENT_TABLE = "create table bytes_sent (stat_date date not null primary key, amount bigint not null)";
-	public static final String CREATE_BYTES_RECEIVED_TABLE = "create table bytes_received (stat_date date not null primary key, amount bigint not null)";
+	public static final String CREATE_TRAFFIC_STATAS_TABLE = "create table traffic_stats (datepart_year int not null, datepart_month int not null, datepart_day int not null, amount_sent bigint not null, amount_received bigint not null, primary key(datepart_year, datepart_month, datepart_day))";
 
 	protected Connection connection;
 
@@ -31,12 +30,11 @@ public abstract class SQLiteStorage {
 
 	private void initiateDatabase() {
 		try (Statement statement = connection.createStatement()) {
-			statement.execute(CREATE_BYTES_SENT_TABLE);
-			statement.execute(CREATE_BYTES_RECEIVED_TABLE);
+			statement.execute(CREATE_TRAFFIC_STATAS_TABLE);
 		} catch (SQLException ignored) {}
 	}
 
-	protected void close() {
+	public void close() {
 		try {
 			if(!connection.isClosed()) {
 				connection.close();

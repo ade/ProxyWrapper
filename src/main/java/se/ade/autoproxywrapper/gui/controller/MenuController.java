@@ -7,8 +7,7 @@ import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import se.ade.autoproxywrapper.Main;
 import se.ade.autoproxywrapper.events.EventBus;
@@ -28,7 +27,7 @@ public class MenuController {
     public void menuProperties() throws IOException {
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getClassLoader().getResource("view/properties.fxml"));
-        BorderPane pane = loader.load();
+        Pane pane = loader.load();
 
         Stage stage = new Stage(DECORATED);
         stage.initOwner(main.getPrimaryStage());
@@ -46,7 +45,7 @@ public class MenuController {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getClassLoader().getResource("view/proxies.fxml"));
-            VBox pane = loader.load();
+            Pane pane = loader.load();
 
             Stage stage = new Stage(DECORATED);
             stage.initOwner(main.getPrimaryStage());
@@ -61,6 +60,23 @@ public class MenuController {
             e.printStackTrace();
         }
     }
+
+	@FXML
+	public void menuStatistics() throws IOException{
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(getClass().getClassLoader().getResource("view/statistics.fxml"));
+		Pane pane = loader.load();
+
+		Stage stage = new Stage(DECORATED);
+		stage.initOwner(main.getPrimaryStage());
+		stage.setResizable(true);
+		stage.setTitle("Statistics");
+		Scene scene = new Scene(pane, 700, 400);
+		stage.setScene(scene);
+		stage.show();
+
+		loader.<StatisticsController>getController().setWindow(stage);
+	}
 
     @FXML
     public void menuClose() {

@@ -36,44 +36,56 @@ public class StatisticsController {
 
 	@FXML
 	public void initialize() {
-		chartTypeChoiceBox.getItems().addAll(LINE_CHART, BAR_CHART);
-		chartTypeChoiceBox.getSelectionModel().select(LINE_CHART);
-		chartTypeChoiceBox.setOnAction(event -> createAndAddChart(yearChoiceBox.getSelectionModel().getSelectedItem(), monthChoiceBox.getSelectionModel().getSelectedItem()));
-
-		setupYearAndMonthChoiceBoxes();
-
-		createAndAddChart(Year.now(), now().getMonth());
-	}
-
-	private void setupYearAndMonthChoiceBoxes() {
 		StatisticsStorage statisticsStorage = StatisticsStorage.instance();
 		availableYearMonths = statisticsStorage.getAvailableYearMonths();
 		statisticsStorage.close();
 
-		availableYearMonths.keySet().stream().forEach(year -> yearChoiceBox.getItems().add(Year.of(year)));
+		chartTypeChoiceBox.getItems().addAll(LINE_CHART, BAR_CHART);
+		chartTypeChoiceBox.getSelectionModel().select(LINE_CHART);
 
-		Year yearString = Year.now();
-		Month monthString = now().getMonth();
-		if (!availableYearMonths.containsKey(now().getYear())) {
-			yearChoiceBox.getItems().add(yearString);
-			monthChoiceBox.getItems().add(monthString);
-			yearChoiceBox.getSelectionModel().select(yearString);
-			monthChoiceBox.getSelectionModel().select(monthString);
-		} else {
-			yearChoiceBox.getSelectionModel().select(yearString);
-			Collection<Integer> monthsInYear = availableYearMonths.get(now().getYear());
-			monthsInYear.stream().forEach(month -> monthChoiceBox.getItems().add(Month.of(month)));
-			if (monthsInYear.stream().noneMatch(month -> now().getMonthValue() == month)) {
-				monthChoiceBox.getItems().add(monthString);
-			}
-			monthChoiceBox.getSelectionModel().select(monthString);
-		}
+		setupYearAndMonthChoiceBoxes(Year.now(), true);
 
-		yearChoiceBox.setOnAction(event -> createAndAddChart(yearChoiceBox.getSelectionModel().getSelectedItem(), monthChoiceBox.getSelectionModel().getSelectedItem()));
-		monthChoiceBox.setOnAction(event -> createAndAddChart(yearChoiceBox.getSelectionModel().getSelectedItem(), monthChoiceBox.getSelectionModel().getSelectedItem()));
+		yearChoiceBox.setOnAction(event -> {
+			setupYearAndMonthChoiceBoxes(yearChoiceBox.getSelectionModel().getSelectedItem(), false);
+			createAndAddChart();
+		});
+		monthChoiceBox.setOnAction(event -> createAndAddChart());
+		chartTypeChoiceBox.setOnAction(event -> createAndAddChart());
+
+		createAndAddChart();
 	}
 
-	private void createAndAddChart(Year year, Month month) {
+	private void setupYearAndMonthChoiceBoxes(Year selectedYear, boolean createMonthIfNotExist) {
+		yearChoiceBox.getItems().clear();
+		monthChoiceBox.getItems().clear();
+
+		availableYearMonths.keySet().stream().forEach(year -> yearChoiceBox.getItems().add(Year.of(year)));
+
+		Month selectedMonth = now().getMonth();
+		if (!availableYearMonths.containsKey(selectedYear.getValue())) {
+			yearChoiceBox.getItems().add(selectedYear);
+			availableYearMonths.put(selectedYear.getValue(), new ArrayList<>());
+		}
+		yearChoiceBox.getSelectionModel().select(selectedYear);
+
+		Collection<Integer> months = availableYearMonths.get(selectedYear.getValue());
+		months.stream().forEach(month -> monthChoiceBox.getItems().add(Month.of(month)));
+
+		if (months.stream().noneMatch(month -> selectedMonth.getValue() == month) && createMonthIfNotExist) {
+			monthChoiceBox.getItems().add(selectedMonth);
+			monthChoiceBox.getSelectionModel().select(selectedMonth);
+		} else {
+			monthChoiceBox.getSelectionModel().selectFirst();
+		}
+	}
+
+	private void createAndAddChart() {
+		Year year = yearChoiceBox.getSelectionModel().getSelectedItem();
+		Month month = monthChoiceBox.getSelectionModel().getSelectedItem();
+		if (year == null || month == null) {
+			return;
+		}
+
 		StatisticsStorage statisticsStorage = StatisticsStorage.instance();
 		Collection<Statistics> filteredStatisticsCollection = statisticsStorage.getStatistics(year.getValue(), month.getValue());
 		statisticsStorage.close();

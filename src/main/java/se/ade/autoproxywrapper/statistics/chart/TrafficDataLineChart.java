@@ -12,7 +12,10 @@ public class TrafficDataLineChart extends TrafficDataChart {
 	private Chart chartNode;
 
 	public TrafficDataLineChart(Year year, Month month, Collection<Statistics> filteredStatisticsCollection) {
-		ByteUnit byteUnit = ByteUnit.getUnitForValue(filteredStatisticsCollection.stream().mapToLong(value -> value.getBytesReceived()).max().getAsLong());
+		ByteUnit byteUnit = ByteUnit.BYTE;
+		if(!filteredStatisticsCollection.isEmpty()) {
+			 byteUnit = ByteUnit.getUnitForValue(filteredStatisticsCollection.stream().mapToLong(value -> value.getBytesReceived()).max().getAsLong());
+		}
 
 		NumberAxis na = new NumberAxis(1, month.length(year.isLeap()), 1);
 		NumberAxis na2 = new NumberAxis();

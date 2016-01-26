@@ -13,7 +13,10 @@ public class TrafficDataBarChart extends TrafficDataChart {
 	private Chart chartNode;
 
 	public TrafficDataBarChart(Year year, Month month, Collection<Statistics> filteredStatisticsCollection) {
-		ByteUnit byteUnit = ByteUnit.getUnitForValue(filteredStatisticsCollection.stream().mapToLong(value -> value.getBytesReceived()).max().getAsLong());
+		ByteUnit byteUnit = ByteUnit.BYTE;
+		if(!filteredStatisticsCollection.isEmpty()) {
+			byteUnit = ByteUnit.getUnitForValue(filteredStatisticsCollection.stream().mapToLong(value -> value.getBytesReceived()).max().getAsLong());
+		}
 
 		ObservableList<String> days = FXCollections.observableArrayList();
 		for (int i = 1; i <= month.length(year.isLeap()); i++) {

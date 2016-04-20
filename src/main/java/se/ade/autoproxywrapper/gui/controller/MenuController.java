@@ -62,6 +62,48 @@ public class MenuController {
         }
     }
 
+	@FXML
+	public void menuBlockedHosts() throws IOException {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(getClass().getClassLoader().getResource("view/hostlist.fxml"));
+			VBox pane = loader.load();
+
+			Stage stage = new Stage(DECORATED);
+			stage.initOwner(main.getPrimaryStage());
+			stage.setResizable(false);
+			stage.setTitle("Blocked hosts");
+			Scene scene = new Scene(pane, 500, 300);
+			stage.setScene(scene);
+			stage.show();
+
+			loader.<HostListController>getController().setWindow(stage).editBlockedHosts();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@FXML
+	public void menuDirectModeHosts() throws IOException {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(getClass().getClassLoader().getResource("view/hostlist.fxml"));
+			VBox pane = loader.load();
+
+			Stage stage = new Stage(DECORATED);
+			stage.initOwner(main.getPrimaryStage());
+			stage.setResizable(false);
+			stage.setTitle("Direct mode hosts");
+			Scene scene = new Scene(pane, 500, 300);
+			stage.setScene(scene);
+			stage.show();
+
+			loader.<HostListController>getController().setWindow(stage).editDirectModeHosts();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
     @FXML
     public void menuClose() {
         EventBus.get().post(new ShutDownEvent());

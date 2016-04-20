@@ -22,16 +22,19 @@ import se.ade.autoproxywrapper.model.ForwardProxy;
 
 import static se.ade.autoproxywrapper.config.Config.getConfig;
 
-public class ProxiesController {
+public class HostListController {
+	private enum Mode {
+		BLOCKED_HOSTS,
+		DIRECT_MODE_HOSTS
+	}
+
+	private Mode mode;
 
     @FXML
-    public ListView<ForwardProxy> hostList;
+    public ListView<String> hostList;
 
     @FXML
     public TextField newHostName;
-
-    @FXML
-    public TextField newPort;
 
     @FXML
     public Button addButton;
@@ -39,38 +42,37 @@ public class ProxiesController {
     @FXML
     public Button saveButton;
 
-    private ForwardProxy selectedProxy;
-    private ObservableList<ForwardProxy> items = FXCollections.observableArrayList();
+    private String selectedHost;
+    private ObservableList<String> items = FXCollections.observableArrayList();
     private Stage window;
 
     @FXML
     public void initialize() {
-        hostList.setPlaceholder(new Label("No proxies configured."));
-        hostList.getSelectionModel().selectedItemProperty().addListener(getForwardProxyChangeListener());
-        hostList.setCellFactory(param -> new ForwardProxyListCell());
+        hostList.setPlaceholder(new Label("No hosts configured."));
+        hostList.getSelectionModel().selectedItemProperty().addListener(getHostChangeListener());
+        hostList.setCellFactory(param -> new HostsListCell());
         Bindings.bindContent(hostList.getItems(), items);
-
-        items.addAll(getConfig().getForwardProxies());
     }
 
-    private ChangeListener<ForwardProxy> getForwardProxyChangeListener() {
+    private ChangeListener<String> getHostChangeListener() {
         return (observable, oldValue, newValue) -> select(newValue);
     }
 
     @FXML
-    public void saveForwardProxy(Event event) {
+    public void saveHost(Event event) {
         if (event instanceof KeyEvent && ((KeyEvent) event).getCode() != KeyCode.ENTER) {
             return;
         }
         if (!validateInput()) {
             return;
         }
-        if (selectedProxy != null) {
-            selectedProxy.setHost(newHostName.getText());
-            selectedProxy.setPort(Integer.parseInt(newPort.getText()));
+        if (selectedHost != null) {
+			String newText = newHostName.getText();
+			items.add(items.indexOf(selectedHost), newText);
+			items.remove(selectedHost);
+            selectedHost = newText;
         } else {
-            ForwardProxy newForwardProxy = new ForwardProxy(newHostName.getText(), Integer.parseInt(newPort.getText()));
-            items.add(newForwardProxy);
+            items.add(newHostName.getText());
             newHostName.requestFocus();
         }
         deselect();
@@ -84,12 +86,25 @@ public class ProxiesController {
 
     @FXML
     public void save() {
-        getConfig().setForwardProxies(items);
+		if(mode == Mode.BLOCKED_HOSTS) {
+			getConfig().setBlockedHosts(items);
+		} else if(mode == Mode.DIRECT_MODE_HOSTS) {
+			getConfig().setDirectModeHosts(items);
+		}
+
         Config.save();
         window.close();
-        EventBus.get().post(GenericLogEvent.info("Restarting..."));
-        EventBus.get().post(new RestartEvent());
     }
+
+	public void editBlockedHosts() {
+		items.addAll(getConfig().getBlockedHosts());
+		mode = Mode.BLOCKED_HOSTS;
+	}
+
+	public void editDirectModeHosts() {
+		items.addAll(getConfig().getDirectModeHosts());
+		mode = Mode.DIRECT_MODE_HOSTS;
+	}
 
     private boolean validateInput() {
         if (newHostName.getText().equals("")) {
@@ -99,34 +114,24 @@ public class ProxiesController {
             return false;
         }
         newHostName.getStyleClass().remove("invalid-field");
-        if (newPort.getText().equals("") || !StringUtils.isNumeric(newPort.getText()) || Integer.parseInt(newPort.getText()) > Short.MAX_VALUE) {
-            if (!newPort.getStyleClass().contains("invalid-field")) {
-                newPort.getStyleClass().add("invalid-field");
-            }
-            return false;
-        }
-        newPort.getStyleClass().remove("invalid-field");
         return true;
     }
 
     private void resetValidation() {
         newHostName.getStyleClass().remove("invalid-field");
-        newPort.getStyleClass().remove("invalid-field");
     }
 
-    private void select(ForwardProxy proxy) {
-        selectedProxy = proxy;
-        newHostName.setText(selectedProxy.getHost());
-        newPort.setText(Integer.toString(selectedProxy.getPort()));
+    private void select(String host) {
+        selectedHost = host;
+        newHostName.setText(selectedHost);
         addButton.setVisible(false);
         saveButton.setVisible(true);
         resetValidation();
     }
 
     private void deselect() {
-        selectedProxy = null;
+        selectedHost = null;
         newHostName.setText("");
-        newPort.setText("");
         hostList.getSelectionModel().select(null);
         saveButton.setVisible(false);
         addButton.setVisible(true);
@@ -137,14 +142,14 @@ public class ProxiesController {
         hostList.getProperties().put("listRecreateKey", Boolean.TRUE);
     }
 
-    public void setWindow(Stage window) {
+    public HostListController setWindow(Stage window) {
         this.window = window;
+		return this;
     }
 
-    public class ForwardProxyListCell extends ListCell<ForwardProxy> {
-
+    public class HostsListCell extends ListCell<String> {
         @Override
-        protected void updateItem(ForwardProxy item, boolean empty) {
+        protected void updateItem(String item, boolean empty) {
             if (empty) {
                 setText("");
                 setOnMouseClicked(event -> deselect());
@@ -155,7 +160,7 @@ public class ProxiesController {
                 contextMenu.getItems().add(removeMenuItem);
                 setContextMenu(contextMenu);
 
-                setText(item.getHost() + ":" + item.getPort());
+                setText(item);
                 setOnMouseClicked(null);
             }
             super.updateItem(item, empty);
@@ -163,9 +168,9 @@ public class ProxiesController {
 
         private EventHandler<ActionEvent> getRemoveEvent() {
             return event -> {
-                for (ForwardProxy proxy : items) {
-                    if (proxy.equals(hostList.getSelectionModel().getSelectedItem())) {
-                        items.remove(proxy);
+                for (String host : items) {
+                    if (host.equals(hostList.getSelectionModel().getSelectedItem())) {
+                        items.remove(host);
                         deselect();
                         break;
                     }

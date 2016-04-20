@@ -13,6 +13,8 @@
             <items>
                   <MenuItem mnemonicParsing="false" onAction="#menuProperties" text="Properties" />
                   <MenuItem mnemonicParsing="false" onAction="#menuProxies" text="Proxies" />
+                  <MenuItem mnemonicParsing="false" onAction="#menuBlockedHosts" text="Blocked hosts" />
+                  <MenuItem mnemonicParsing="false" onAction="#menuDirectModeHosts" text="Direct mode hosts" />
                   <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem mnemonicParsing="false" onAction="#menuClose" text="Exit" />
             </items>

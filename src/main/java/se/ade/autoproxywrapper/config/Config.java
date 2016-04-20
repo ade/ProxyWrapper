@@ -8,7 +8,7 @@ public final class Config {
 
 	private Config() {}
 
-	public static GsonConfig get() {
+	public static GsonConfig getConfig() {
 		if(config == null) {
 			if (!GsonConfigIO.configExists()) {
 				GsonConfigIO.save(new GsonConfig());

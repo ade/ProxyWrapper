@@ -3,7 +3,7 @@ package se.ade.autoproxywrapper.events;
 public class GenericLogEvent {
 
     public enum GenericLogEventType {
-        INFO, VERBOSE
+        INFO, ERROR, VERBOSE
     }
 
     public final String message;
@@ -15,6 +15,10 @@ public class GenericLogEvent {
 
     public static GenericLogEvent verbose(String message) {
         return new GenericLogEvent(message, GenericLogEventType.VERBOSE);
+    }
+
+	public static GenericLogEvent error(String message) {
+        return new GenericLogEvent(message, GenericLogEventType.ERROR);
     }
 
     private GenericLogEvent(String message, GenericLogEventType type) {

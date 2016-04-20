@@ -1,10 +1,8 @@
 package se.ade.autoproxywrapper;
 
 public enum ProxyMode {
-    AUTO("Auto"),
     DIRECT("Direct"),
-    USE_PROXY("Proxied"),
-    DISABLED("Disabled");
+    USE_PROXY("Proxied");
 
     private String name;
 

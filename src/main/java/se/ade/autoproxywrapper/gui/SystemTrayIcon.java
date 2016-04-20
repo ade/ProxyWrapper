@@ -1,6 +1,6 @@
 package se.ade.autoproxywrapper.gui;
 
-import static se.ade.autoproxywrapper.config.Config.get;
+import static se.ade.autoproxywrapper.config.Config.getConfig;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -13,6 +13,7 @@ import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import se.ade.autoproxywrapper.Labels;
 import se.ade.autoproxywrapper.Main;
+import se.ade.autoproxywrapper.MiniHttpProxy;
 import se.ade.autoproxywrapper.ProxyMode;
 import se.ade.autoproxywrapper.events.*;
 
@@ -23,9 +24,11 @@ public class SystemTrayIcon {
     private MenuItem toggleItem;
     private Main application;
 	private Labels labels = Labels.get();
+	private MiniHttpProxy proxy;
 
-    public SystemTrayIcon(Main main) throws IOException, AWTException {
+    public SystemTrayIcon(Main main, MiniHttpProxy proxy) throws IOException, AWTException {
         this.application = main;
+		this.proxy = proxy;
         if (SystemTray.isSupported()) {
             EventBus.get().register(this);
 
@@ -38,10 +41,10 @@ public class SystemTrayIcon {
             MenuItem closeItem = new MenuItem(labels.get("actions.exit"));
             closeItem.addActionListener(getCloseEventHandler());
 
-            currentStateItem = new MenuItem(getStateText(get().isEnabled()));
+            currentStateItem = new MenuItem(getStateText(getConfig().isEnabled()));
             currentStateItem.setEnabled(false);
 
-            toggleItem = new MenuItem(getToggleText(get().isEnabled()));
+            toggleItem = new MenuItem(getToggleText(getConfig().isEnabled()));
             toggleItem.addActionListener(getEnableEventHandler());
 
             popupMenu.add(showItem);
@@ -74,9 +77,11 @@ public class SystemTrayIcon {
     private ActionListener getEnableEventHandler() {
         return event -> Platform.runLater(() -> {
             if(toggleItem.getLabel().equals(labels.get("mode.change-to-auto"))) {
-                EventBus.get().post(new SetModeEvent(ProxyMode.AUTO));
+                EventBus.get().post(new SetEnabledEvent(true));
+				toggleItem.setLabel(labels.get("mode.change-to-direct"));
             } else {
-                EventBus.get().post(new SetModeEvent(ProxyMode.DISABLED));
+                EventBus.get().post(new SetEnabledEvent(false));
+				toggleItem.setLabel(labels.get("mode.change-to-auto"));
             }
         });
     }
@@ -88,16 +93,14 @@ public class SystemTrayIcon {
     }
 
     private String getStateText(boolean enabled) {
-        return labels.get("generic.proxy-mode") + ": " + (enabled ? labels.get("mode.auto") : labels.get("mode.direct"));
+        String mode = labels.get("generic.proxy-mode") + ": " + (enabled ? labels.get("mode.auto") : labels.get("mode.direct"));
+		if(enabled && proxy.getMode() != null) {
+			mode += " (" + proxy.getMode().getName() + ")";
+		}
+		return mode;
     }
 
     private String getToggleText(boolean enabled) {
         return enabled ? labels.get("mode.change-to-direct") : labels.get("mode.change-to-auto");
-    }
-
-    @Subscribe
-    public void setModeEvent(SetModeEvent event) {
-        currentStateItem.setLabel(getStateText(event.mode == ProxyMode.AUTO));
-        toggleItem.setLabel(getToggleText(event.mode == ProxyMode.AUTO));
     }
 }

@@ -39,7 +39,7 @@ public class Main extends Application {
 			primaryStage.setTitle(labels.get("app.name"));
 			loadMain();
 			loadLogView();
-			if(!Config.get().isStartMinimized()) {
+			if(!Config.getConfig().isStartMinimized()) {
 				primaryStage.show();
 			}
 
@@ -47,7 +47,7 @@ public class Main extends Application {
 
 			proxy = new MiniHttpProxy();
 			pool.submit(proxy);
-			new SystemTrayIcon(this);
+			new SystemTrayIcon(this, proxy);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeApplication();
@@ -93,13 +93,8 @@ public class Main extends Application {
 	}
 
 	@Subscribe
-	public void setModeEvent(SetModeEvent event) {
-		if(event.mode == ProxyMode.DISABLED) {
-			Config.get().setEnabled(false);
-
-		} else if(event.mode == ProxyMode.AUTO) {
-			Config.get().setEnabled(true);
-		}
+	public void setModeEvent(SetEnabledEvent event) {
+		Config.getConfig().setEnabled(event.enabled);
 		Config.save();
 		EventBus.get().post(GenericLogEvent.info("Restarting..."));
 		EventBus.get().post(new RestartEvent());

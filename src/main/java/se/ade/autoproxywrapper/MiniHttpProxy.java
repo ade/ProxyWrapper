@@ -12,9 +12,13 @@ import se.ade.autoproxywrapper.events.*;
 import se.ade.autoproxywrapper.model.ForwardProxy;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Queue;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
-import static se.ade.autoproxywrapper.config.Config.get;
+import static se.ade.autoproxywrapper.config.Config.getConfig;
 
 public class MiniHttpProxy implements Runnable{
     private final static long DNS_LOOKUP_INTERVAL = 5000;
@@ -39,7 +43,7 @@ public class MiniHttpProxy implements Runnable{
 
     private LocationProber locationProber = new LocationProber();
 
-    private ProxyMode currentMode = ProxyMode.AUTO;
+    private ProxyMode currentMode = ProxyMode.DIRECT;
     private HttpProxyServer proxyServer;
 
     public MiniHttpProxy() {
@@ -47,12 +51,11 @@ public class MiniHttpProxy implements Runnable{
     }
 
     private void refreshProxyState() {
-        if(!get().isEnabled()) {
+        if(!getConfig().isEnabled()) {
             forwardProxyAddress = null;
             isProxyResolvable = false;
-            if(currentMode != ProxyMode.DISABLED) {
-                EventBus.get().post(GenericLogEvent.info("In bypass mode"));
-                currentMode = ProxyMode.DISABLED;
+            if(currentMode != ProxyMode.DIRECT) {
+                setMode(ProxyMode.DIRECT);
             }
             return;
         }
@@ -64,14 +67,14 @@ public class MiniHttpProxy implements Runnable{
                     public void run() {
                         try {
                             boolean isProxyFound = false;
-                            for(ForwardProxy proxy: get().getForwardProxies()) {
+                            for(ForwardProxy proxy: getConfig().getForwardProxies()) {
                                 isProxyResolvable = locationProber.isAddressResolvable(proxy.getHost());
                                 if (isProxyResolvable) {
                                     isProxyFound = true;
                                     InetSocketAddress inetSocketAddress = new InetSocketAddress(proxy.getHost(), proxy.getPort());
                                     if(forwardProxyAddress == null || !forwardProxyAddress.equals(inetSocketAddress)) {
                                         forwardProxyAddress = inetSocketAddress;
-                                        currentMode = ProxyMode.USE_PROXY;
+                                        setMode(ProxyMode.USE_PROXY);
                                         EventBus.get().post(new DetectModeEvent(ProxyMode.USE_PROXY, forwardProxyAddress));
                                     }
                                     break;
@@ -82,7 +85,7 @@ public class MiniHttpProxy implements Runnable{
                                 forwardProxyAddress = null;
                                 if(currentMode != ProxyMode.DIRECT) {
                                     EventBus.get().post(new DetectModeEvent(ProxyMode.DIRECT, null));
-                                    currentMode = ProxyMode.DIRECT;
+                                    setMode(ProxyMode.DIRECT);
                                 }
                             }
                         } catch (Exception e) {
@@ -96,8 +99,14 @@ public class MiniHttpProxy implements Runnable{
         }
     }
 
-    public void startProxy() {
-        if(get().getForwardProxies().isEmpty() || get().getLocalPort() == 0) {
+	public void setMode(ProxyMode mode) {
+		EventBus.get().post(GenericLogEvent.info("In mode " + mode.name()));
+		EventBus.get().post(new ModeChangedEvent(mode));
+		currentMode = mode;
+	}
+
+	public void startProxy() {
+        if(getConfig().getForwardProxies().isEmpty() || getConfig().getLocalPort() == 0) {
             EventBus.get().post(GenericLogEvent.info("No proxies and/or no local listening port. Please review your properties and proxies."));
             return;
         }
@@ -124,6 +133,17 @@ public class MiniHttpProxy implements Runnable{
         ChainedProxyManager chainedProxyManager = new ChainedProxyManager() {
             @Override
             public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
+				if(getConfig().isBlockedHostsEnabled() && isBlockedHost(httpRequest.getUri())) {
+					EventBus.get().post(GenericLogEvent.verbose("Blocked request: " + httpRequest.getUri()));
+					return;
+				}
+
+				if(getConfig().isDirectModeHostsEnabled() && isDirectModeHost(httpRequest.getUri())) {
+					EventBus.get().post(GenericLogEvent.verbose("Using direct mode for request: " + httpRequest.getUri()));
+					chainedProxies.add(ChainedProxyAdapter.FALLBACK_TO_DIRECT_CONNECTION);
+					return;
+				}
+
                 refreshProxyState();
                 if(isProxyResolvable) {
                     chainedProxies.add(forwardProxy);
@@ -138,7 +158,7 @@ public class MiniHttpProxy implements Runnable{
         };
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
-                .withPort(get().getLocalPort())
+                .withPort(getConfig().getLocalPort())
                 .withConnectTimeout(10000)
                 .withChainProxyManager(chainedProxyManager);
 
@@ -160,16 +180,78 @@ public class MiniHttpProxy implements Runnable{
         proxyServer = bootstrap.start();
     }
 
-    public void stopProxy() {
+	private boolean isBlockedHost(String uri) {
+		String host = getHost(uri);
+		for(String regex : getConfig().getBlockedHosts()) {
+			if(regexMatches(host, regex)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean regexMatches(String host, String regex) {
+		if(host == null || regex == null) {
+			return false;
+		}
+
+		Pattern p;
+		try {
+			p = Pattern.compile(regex);
+		} catch (PatternSyntaxException e) {
+			EventBus.get().post(GenericLogEvent.error("Invalid host regex pattern: " + regex));
+			return false;
+		}
+		return p.matcher(host).matches();
+	}
+
+	private boolean isDirectModeHost(String uri) {
+		String host = getHost(uri);
+		for(String regex : getConfig().getDirectModeHosts()) {
+			if(regexMatches(host, regex)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private String getHost(String uri) {
+		if(uri == null) {
+			return null;
+		}
+
+		uri = uri.toLowerCase();
+
+		if(uri.startsWith("http")) {
+			try {
+				uri = new URI(uri).getHost();
+			} catch (URISyntaxException e) {
+				return null;
+			}
+		}
+
+		if(uri.contains(":")) {
+			return uri.split(":")[0];
+		} else {
+			return uri;
+		}
+	}
+
+	public void stopProxy() {
         if (proxyServer != null) {
-            proxyServer.abort();
-            forwardProxyAddress = null;
-            currentMode = ProxyMode.AUTO;
+			proxyServer.abort();
+			forwardProxyAddress = null;
             proxyServer = null;
         }
     }
 
-    @Override
+	public ProxyMode getMode() {
+		return currentMode;
+	}
+
+	@Override
     public void run() {
         startProxy();
     }

@@ -10,9 +10,9 @@ import se.ade.autoproxywrapper.ProxyMode;
 import se.ade.autoproxywrapper.events.EventBus;
 import se.ade.autoproxywrapper.events.GenericLogEvent;
 import se.ade.autoproxywrapper.events.RestartEvent;
-import se.ade.autoproxywrapper.events.SetModeEvent;
+import se.ade.autoproxywrapper.events.SetEnabledEvent;
 
-import static se.ade.autoproxywrapper.config.Config.get;
+import static se.ade.autoproxywrapper.config.Config.getConfig;
 
 public class PropertiesController {
 
@@ -28,14 +28,22 @@ public class PropertiesController {
 	@FXML
 	public CheckBox minimizeOnStartup;
 
+	@FXML
+	public CheckBox useBlockedHosts;
+
+	@FXML
+	public CheckBox useDirectModeHosts;
+
     private Stage propertiesWindow;
 
     @FXML
     public void initialize() {
-        listeningPort.setText(Integer.toString(get().getLocalPort()));
-        enabled.setSelected(get().isEnabled());
-		minimizeOnStartup.setSelected(get().isStartMinimized());
-        verboseLogging.setSelected(get().isVerboseLogging());
+        listeningPort.setText(Integer.toString(getConfig().getLocalPort()));
+        enabled.setSelected(getConfig().isEnabled());
+		minimizeOnStartup.setSelected(getConfig().isStartMinimized());
+        verboseLogging.setSelected(getConfig().isVerboseLogging());
+		useBlockedHosts.setSelected(getConfig().isBlockedHostsEnabled());
+		useDirectModeHosts.setSelected(getConfig().isDirectModeHostsEnabled());
     }
 
     @FXML
@@ -44,17 +52,19 @@ public class PropertiesController {
             return;
         }
         int newLocalPort = Integer.parseInt(listeningPort.getText());
-        if(get().getLocalPort() != newLocalPort) {
-            get().setLocalPort(newLocalPort);
+        if(getConfig().getLocalPort() != newLocalPort) {
+            getConfig().setLocalPort(newLocalPort);
             EventBus.get().post(GenericLogEvent.info("Restarting..."));
             EventBus.get().post(new RestartEvent());
         }
-		get().setStartMinimized(minimizeOnStartup.isSelected());
-        get().setVerboseLogging(verboseLogging.isSelected());
+		getConfig().setStartMinimized(minimizeOnStartup.isSelected());
+        getConfig().setVerboseLogging(verboseLogging.isSelected());
+		getConfig().setBlockedHostsEnabled(useBlockedHosts.isSelected());
+		getConfig().setDirectModeHostsEnabled(useDirectModeHosts.isSelected());
         Config.save();
 
-        if(enabled.isSelected() != get().isEnabled()) {
-            EventBus.get().post(new SetModeEvent(enabled.isSelected() ? ProxyMode.AUTO : ProxyMode.DISABLED));
+        if(enabled.isSelected() != getConfig().isEnabled()) {
+            EventBus.get().post(new SetEnabledEvent(enabled.isSelected()));
         }
 
         propertiesWindow.close();

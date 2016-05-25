@@ -1,6 +1,7 @@
 package se.ade.autoproxywrapper.config.model;
 
 import javafx.collections.ObservableList;
+import se.ade.autoproxywrapper.loopback.LoopBackConfig;
 import se.ade.autoproxywrapper.model.ForwardProxy;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ public class GsonConfig {
     private List<ForwardProxy> forwardProxies = new ArrayList<>();
 	private List<String> blockedHosts = new ArrayList<>();
 	private List<String> directModeHosts = new ArrayList<>();
+	private List<LoopBackConfig> loopBackConfigs = new ArrayList<>();
     private int localPort;
     private boolean enabled = true;
 	private boolean startMinimized;
@@ -28,6 +30,10 @@ public class GsonConfig {
 
 	public List<String> getDirectModeHosts() {
 		return directModeHosts;
+	}
+
+	public List<LoopBackConfig> getLoopBackConfigs() {
+		return loopBackConfigs;
 	}
 
 	public void setForwardProxies(List<ForwardProxy> forwardProxies) {

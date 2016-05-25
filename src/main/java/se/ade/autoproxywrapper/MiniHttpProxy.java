@@ -9,18 +9,23 @@ import io.netty.handler.codec.http.HttpResponse;
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import se.ade.autoproxywrapper.events.*;
+import se.ade.autoproxywrapper.loopback.LoopBackConfig;
+import se.ade.autoproxywrapper.loopback.LoopBackServer;
+import se.ade.autoproxywrapper.loopback.LoopBackService;
 import se.ade.autoproxywrapper.model.ForwardProxy;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Queue;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static se.ade.autoproxywrapper.config.Config.getConfig;
+import static se.ade.autoproxywrapper.config.Config.save;
 
-public class MiniHttpProxy implements Runnable{
+public class MiniHttpProxy implements Runnable, ModeSelector {
     private final static long DNS_LOOKUP_INTERVAL = 5000;
 
     private Object eventListener = new Object() {
@@ -46,7 +51,9 @@ public class MiniHttpProxy implements Runnable{
     private ProxyMode currentMode = ProxyMode.DIRECT;
     private HttpProxyServer proxyServer;
 
-    public MiniHttpProxy() {
+	private LoopBackService loopBackService;
+
+	public MiniHttpProxy() {
         EventBus.get().register(eventListener);
     }
 
@@ -177,8 +184,30 @@ public class MiniHttpProxy implements Runnable{
             }
         });
 
+		startLoopBackService();
+
         proxyServer = bootstrap.start();
     }
+
+	private void startLoopBackService() {
+		getConfig().getLoopBackConfigs().add(new LoopBackConfig("ade.se", 8080, 25565, "ade minecraft"));
+		save();
+
+		List<LoopBackConfig> loopBackConfigs = getConfig().getLoopBackConfigs();
+		if(loopBackConfigs == null || loopBackConfigs.size() == 0) {
+			return;
+		}
+
+		loopBackService = new LoopBackService(this, loopBackConfigs);
+		loopBackService.start();
+	}
+
+	private void stopLoopBackService() {
+		if(loopBackService != null) {
+			loopBackService.destroyService();
+			loopBackService = null;
+		}
+	}
 
 	private boolean isBlockedHost(String uri) {
 		String host = getHost(uri);
@@ -245,6 +274,7 @@ public class MiniHttpProxy implements Runnable{
 			forwardProxyAddress = null;
             proxyServer = null;
         }
+		stopLoopBackService();
     }
 
 	public ProxyMode getMode() {

@@ -190,9 +190,6 @@ public class MiniHttpProxy implements Runnable, ModeSelector {
     }
 
 	private void startLoopBackService() {
-		getConfig().getLoopBackConfigs().add(new LoopBackConfig("ade.se", 8080, 25565, "ade minecraft"));
-		save();
-
 		List<LoopBackConfig> loopBackConfigs = getConfig().getLoopBackConfigs();
 		if(loopBackConfigs == null || loopBackConfigs.size() == 0) {
 			return;

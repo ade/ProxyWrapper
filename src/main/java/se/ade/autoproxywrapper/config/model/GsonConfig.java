@@ -95,4 +95,8 @@ public class GsonConfig {
 	public void setDirectModeHostsEnabled(boolean directModeHostsEnabled) {
 		this.directModeHostsEnabled = directModeHostsEnabled;
 	}
+
+	public void setLoopbackConfigs(ObservableList<LoopBackConfig> items) {
+		this.loopBackConfigs = items;
+	}
 }

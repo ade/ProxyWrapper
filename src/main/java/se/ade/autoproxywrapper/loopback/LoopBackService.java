@@ -66,7 +66,7 @@ public class LoopBackService extends Thread {
 				NIOServerSocket listener = this.nioService.openServerSocket(config.getLocalPort());
 				LoopBackServer server = new LoopBackServer(config, listener, this);
 				serverSockets.put(config, server);
-				EventBus.get().post(GenericLogEvent.verbose("Loopback service listening on port " + config.getLocalPort()));
+				EventBus.get().post(GenericLogEvent.verbose("Loopback service listening on port " + config.getLocalPort() + " -> " + config.getRemoteHost() + ":" + config.getRemotePort()));
 			} catch (IOException e) {
 				EventBus.get().post(GenericLogEvent.error("Can't start server on port " + config.getLocalPort() + ": " + e));
 			}

@@ -104,6 +104,27 @@ public class MenuController {
 		}
 	}
 
+	@FXML
+	public void menuLoopbacks() throws IOException {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(getClass().getClassLoader().getResource("view/loopbacks.fxml"));
+			VBox pane = loader.load();
+
+			Stage stage = new Stage(DECORATED);
+			stage.initOwner(main.getPrimaryStage());
+			stage.setResizable(false);
+			stage.setTitle("Loopback configurations");
+			Scene scene = new Scene(pane, 500, 300);
+			stage.setScene(scene);
+			stage.show();
+
+			loader.<LoopbackController>getController().setWindow(stage);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
     @FXML
     public void menuClose() {
         EventBus.get().post(new ShutDownEvent());

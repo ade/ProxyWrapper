@@ -15,6 +15,7 @@
                   <MenuItem mnemonicParsing="false" onAction="#menuProxies" text="Proxies" />
                   <MenuItem mnemonicParsing="false" onAction="#menuBlockedHosts" text="Blocked hosts" />
                   <MenuItem mnemonicParsing="false" onAction="#menuDirectModeHosts" text="Direct mode hosts" />
+                  <MenuItem mnemonicParsing="false" onAction="#menuLoopbacks" text="Loopback configurations" />
                   <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem mnemonicParsing="false" onAction="#menuClose" text="Exit" />
             </items>
